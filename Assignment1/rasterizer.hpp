@@ -82,6 +82,7 @@ class rasterizer
     std::vector<float> depth_buf;
     int get_index(int x, int y);
 
+    // 视口大小，结果图片的大小
     int width, height;
 
     int next_id = 0;

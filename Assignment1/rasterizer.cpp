@@ -12,6 +12,8 @@
 rst::pos_buf_id rst::rasterizer::load_positions(const std::vector<Eigen::Vector3f> &positions)
 {
     auto id = get_next_id();
+
+    // 避免用insert产生临时变量
     pos_buf.emplace(id, positions);
 
     return {id};
@@ -132,13 +134,16 @@ auto to_vec4(const Eigen::Vector3f& v3, float w = 1.0f)
     return Vector4f(v3.x(), v3.y(), v3.z(), w);
 }
 
+// 绘制指定id的点集 的指定Id的三角形
 void rst::rasterizer::draw(rst::pos_buf_id pos_buffer, rst::ind_buf_id ind_buffer, rst::Primitive type)
 {
     if (type != rst::Primitive::Triangle)
     {
         throw std::runtime_error("Drawing primitives other than triangle is not implemented yet!");
     }
+    // 此id表示的点集
     auto& buf = pos_buf[pos_buffer.pos_id];
+    // 此id的三角形索引集
     auto& ind = ind_buf[ind_buffer.ind_id];
 
     float f1 = (100 - 0.1) / 2.0;
@@ -149,16 +154,19 @@ void rst::rasterizer::draw(rst::pos_buf_id pos_buffer, rst::ind_buf_id ind_buffe
     {
         Triangle t;
 
+        // 执行所有模型，视图，投影变换
         Eigen::Vector4f v[] = {
                 mvp * to_vec4(buf[i[0]], 1.0f),
                 mvp * to_vec4(buf[i[1]], 1.0f),
                 mvp * to_vec4(buf[i[2]], 1.0f)
         };
 
+        // 标准化， 使w分量为1
         for (auto& vec : v) {
             vec /= vec.w();
         }
 
+        // 视口变换
         for (auto & vert : v)
         {
             vert.x() = 0.5*width*(vert.x()+1.0);
@@ -169,8 +177,8 @@ void rst::rasterizer::draw(rst::pos_buf_id pos_buffer, rst::ind_buf_id ind_buffe
         for (int i = 0; i < 3; ++i)
         {
             t.setVertex(i, v[i].head<3>());
-            t.setVertex(i, v[i].head<3>());
-            t.setVertex(i, v[i].head<3>());
+            //t.setVertex(i, v[i].head<3>());
+            //t.setVertex(i, v[i].head<3>());
         }
 
         t.setColor(0, 255.0,  0.0,  0.0);
