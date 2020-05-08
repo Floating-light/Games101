@@ -209,6 +209,7 @@ Vector3f castRay(
 // primary rays and cast these rays into the scene. The content of the framebuffer is
 // saved to a file.
 // [/comment]
+// https://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-generating-camera-rays/generating-camera-rays
 void Renderer::Render(const Scene& scene)
 {
     std::vector<Vector3f> framebuffer(scene.width * scene.height);
@@ -222,7 +223,7 @@ void Renderer::Render(const Scene& scene)
     for (int j = 0; j < scene.height; ++j)
     {
         for (int i = 0; i < scene.width; ++i)
-        {
+        {   
             // generate primary ray direction
             float x = 0;
             float y = 0;
