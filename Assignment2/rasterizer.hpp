@@ -58,6 +58,8 @@ namespace rst
     {
     public:
         rasterizer(int w, int h);
+        // MSAA 
+        rasterizer(int w, int h, int n);
         pos_buf_id load_positions(const std::vector<Eigen::Vector3f>& positions);
         ind_buf_id load_indices(const std::vector<Eigen::Vector3i>& indices);
         col_buf_id load_colors(const std::vector<Eigen::Vector3f>& colors);
@@ -78,7 +80,10 @@ namespace rst
         void draw_line(Eigen::Vector3f begin, Eigen::Vector3f end);
 
         void rasterize_triangle(const Triangle& t);
-
+        /*
+        * Param n n*n MSAA super sample 
+        */
+        void rasterize_triangle_MSAA(const Triangle& t, int n);
         // VERTEX SHADER -> MVP -> Clipping -> /.W -> VIEWPORT -> DRAWLINE/DRAWTRI -> FRAGSHADER
 
     private:
@@ -94,9 +99,12 @@ namespace rst
 
         std::vector<float> depth_buf;
         int get_index(int x, int y);
+        // for MSAA
+        int get_index(int x, int y, int n );
+
 
         int width, height;
-
+        int MSAA_n;
         int next_id = 0;
         int get_next_id() { return next_id++; }
     };

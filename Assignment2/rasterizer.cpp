@@ -40,7 +40,7 @@ auto to_vec4(const Eigen::Vector3f& v3, float w = 1.0f)
 }
 
 
-static bool insideTriangle(int x, int y, const Vector3f* _v)
+static bool insideTriangle(float x, float y, const Vector3f* _v)
 {   
     // TODO : Implement this function to check if the point (x, y) is inside the triangle 
     // represented by _v[0], _v[1], _v[2]
@@ -79,6 +79,8 @@ void rst::rasterizer::draw(pos_buf_id pos_buffer, ind_buf_id ind_buffer, col_buf
     for (auto& i : ind)
     {
         Triangle t;
+
+        // 三个顶点
         Eigen::Vector4f v[] = {
                 mvp * to_vec4(buf[i[0]], 1.0f),
                 mvp * to_vec4(buf[i[1]], 1.0f),
@@ -89,6 +91,7 @@ void rst::rasterizer::draw(pos_buf_id pos_buffer, ind_buf_id ind_buffer, col_buf
             vec /= vec.w();
         }
         //Viewport transformation
+        // 从[-1,1]^3 到屏幕空间坐标
         for (auto & vert : v)
         {
             vert.x() = 0.5*width*(vert.x()+1.0);
@@ -112,6 +115,7 @@ void rst::rasterizer::draw(pos_buf_id pos_buffer, ind_buf_id ind_buffer, col_buf
         t.setColor(2, col_z[0], col_z[1], col_z[2]);
 
         rasterize_triangle(t);
+        rasterize_triangle_MSAA(t, MSAA_n);
     }
 }
 
@@ -157,6 +161,56 @@ void rst::rasterizer::rasterize_triangle(const Triangle& t) {
     // TODO : set the current pixel (use the set_pixel function) to the color of the triangle (use getColor function)
     // if it should be painted.
 }
+void rst::rasterizer::rasterize_triangle_MSAA(const Triangle& t, int n)
+{
+    auto v = t.toVector4();
+    
+    const float deltaSample = 1.0f / n;
+
+    // TODO : Find out the bounding box of current triangle.
+    // iterate through the pixel and find if the current pixel is inside the triangle
+    int ymin = std::min(v[0].y(), std::min(v[1].y(), v[2].y()));
+    int ymax = std::max(v[0].y(), std::max(v[1].y(), v[2].y()));
+    int xmin = std::min(v[0].x(), std::min(v[1].x(), v[2].x()));
+    int xmax = std::max(v[0].x(), std::max(v[1].x(), v[2].x()));
+
+    for (int x = xmin; x < xmax; ++x)
+    {
+        for (int y = ymin; y < ymax; ++y)
+        {
+            int count = 0;
+            for (int i = 0; i < n; ++i)
+            {
+                for (int j = 0; j < n; ++j)
+                {
+                    if (insideTriangle(float(x) + i * deltaSample + deltaSample / 2, float(y) + j * deltaSample + deltaSample / 2, t.v))
+                    {
+                        ++count;
+                        // (x * n + i ), (y * n + i) Z-buffer
+                        // 当前点的深度
+                        float alpha, beta, gamma;
+                        std::tie(alpha, beta, gamma) = computeBarycentric2D(x + i * deltaSample, y + j * deltaSample, t.v);
+                        float w_reciprocal = 1.0 / (alpha / v[0].w() + beta / v[1].w() + gamma / v[2].w());
+                        float z_interpolated = alpha * v[0].z() / v[0].w() + beta * v[1].z() / v[1].w() + gamma * v[2].z() / v[2].w();
+                        z_interpolated *= w_reciprocal;
+                        if (z_interpolated < depth_buf[get_index((x * n + i), (y * n + j), n)])
+                        {
+                            depth_buf[get_index((x * n + i), (y * n + j), n)] = z_interpolated;
+                        }
+                    }
+                }
+            }
+            if (count > 0)
+            {
+                auto pre = (float(count) / float(n * n)) * t.getColor();
+                //std::cout << "Precentage : " << (float(count) / float(n * n)) << ", Color : " << pre.normalized() << std::flush;
+                set_pixel(Eigen::Vector3f(x, y, 1), pre);
+            }
+        }
+    }
+}
+
+
 
 void rst::rasterizer::set_model(const Eigen::Matrix4f& m)
 {
@@ -185,15 +239,26 @@ void rst::rasterizer::clear(rst::Buffers buff)
     }
 }
 
-rst::rasterizer::rasterizer(int w, int h) : width(w), height(h)
+rst::rasterizer::rasterizer(int w, int h) : width(w), height(h),MSAA_n(1)
 {
     frame_buf.resize(w * h);
-    depth_buf.resize(w * h);
+    depth_buf.resize(w * h * MSAA_n * MSAA_n);
+}
+
+rst::rasterizer::rasterizer(int w, int h, int n) : width(w), height(h), MSAA_n(n)
+{
+    frame_buf.resize(w * h);
+    depth_buf.resize(w * h * MSAA_n * MSAA_n);
 }
 
 int rst::rasterizer::get_index(int x, int y)
 {
-    return (height-1-y)*width + x;
+    //return (height-1-y)*width + x;
+    return get_index(x, y, 1);
+}
+int rst::rasterizer::get_index(int x, int y, int n)
+{
+    return (height * n - 1 - y) * width*n + x;
 }
 
 void rst::rasterizer::set_pixel(const Eigen::Vector3f& point, const Eigen::Vector3f& color)

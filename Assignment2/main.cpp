@@ -17,7 +17,7 @@ Eigen::Matrix4f get_view_matrix(Eigen::Vector3f eye_pos)
                  0,0,1,-eye_pos[2],
                  0,0,0,1;
 
-    view = translate*view;
+    view = view*translate;
 
     return view;
 }
@@ -25,6 +25,13 @@ Eigen::Matrix4f get_view_matrix(Eigen::Vector3f eye_pos)
 Eigen::Matrix4f get_model_matrix(float rotation_angle)
 {
     Eigen::Matrix4f model = Eigen::Matrix4f::Identity();
+
+    Eigen::Matrix4f RotateZ;
+    RotateZ << cos(rotation_angle), -sin(rotation_angle), 0, 0,
+        sin(rotation_angle), cos(rotation_angle), 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1;
+    model = RotateZ * model;
     return model;
 }
 
@@ -74,6 +81,7 @@ Eigen::Matrix4f get_projection_matrix(float eye_fov, float aspect_ratio, float z
     return projection;
 }
 
+
 int main(int argc, const char** argv)
 {
     float angle = 0;
@@ -86,11 +94,11 @@ int main(int argc, const char** argv)
         filename = std::string(argv[1]);
     }
 
-    rst::rasterizer r(700, 700);
+    rst::rasterizer r(700, 700,2);
 
     Eigen::Vector3f eye_pos = {0,0,5};
 
-
+    // 顶点
     std::vector<Eigen::Vector3f> pos
             {
                     {2, 0, -2},
@@ -101,12 +109,14 @@ int main(int argc, const char** argv)
                     {-1, 0.5, -5}
             };
 
+    // 三角形
     std::vector<Eigen::Vector3i> ind
             {
                     {0, 1, 2},
                     {3, 4, 5}
             };
 
+    // 顶点颜色
     std::vector<Eigen::Vector3f> cols
             {
                     {217.0, 238.0, 185.0},
@@ -141,9 +151,19 @@ int main(int argc, const char** argv)
 
         return 0;
     }
-
+    const float deltaAngle = 20;
     while(key != 27)
     {
+        std::cout << "Input key : " << char(key) << std::endl;
+        if (key == 'a')
+        {
+            angle += deltaAngle;
+            
+        }
+        if (key == 'd')
+        {
+            angle -= deltaAngle;
+        }
         r.clear(rst::Buffers::Color | rst::Buffers::Depth);
 
         r.set_model(get_model_matrix(angle));
