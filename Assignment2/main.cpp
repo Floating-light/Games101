@@ -1,6 +1,6 @@
 // clang-format off
 #include <iostream>
-#include <opencv2/opencv.hpp>
+#include "opencv2/opencv.hpp"
 #include "rasterizer.hpp"
 #include "global.hpp"
 #include "Triangle.hpp"
@@ -90,7 +90,7 @@ int main(int argc, const char** argv)
 
     if (argc == 2)
     {
-        command_line = true;
+        //command_line = true;
         filename = std::string(argv[1]);
     }
 
@@ -110,6 +110,7 @@ int main(int argc, const char** argv)
             };
 
     // 三角形
+    // 第一个三角形MSAA 不明显, 是因为三角形线框过锯齿中间, 导致有色部分很多, 旁边的像素黑色部分也很多, 所以看起来锯齿没啥变化
     std::vector<Eigen::Vector3i> ind
             {
                     {0, 1, 2},

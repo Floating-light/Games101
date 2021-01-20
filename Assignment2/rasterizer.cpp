@@ -202,8 +202,8 @@ void rst::rasterizer::rasterize_triangle_MSAA(const Triangle& t, int n)
             }
             if (count > 0)
             {
-                auto pre = (float(count) / float(n * n)) * t.getColor();
-                //std::cout << "Precentage : " << (float(count) / float(n * n)) << ", Color : " << pre.normalized() << std::flush;
+                const float prencentage = (float(count) / float(n * n));
+                const Vector3f pre = (1 - prencentage ) * get_pixel(Eigen::Vector3f(x, y, 1)) + prencentage * t.getColor();
                 set_pixel(Eigen::Vector3f(x, y, 1), pre);
             }
         }
@@ -271,4 +271,17 @@ void rst::rasterizer::set_pixel(const Eigen::Vector3f& point, const Eigen::Vecto
     frame_buf[ind] = color;
 
 }
+void rst::rasterizer::set_pixel_addback(const Eigen::Vector3f& point, const Eigen::Vector3f& color)
+{
+	auto ind = (point.y()) * width + width - 1 - point.x();
+	frame_buf[ind] += color;
+    frame_buf[ind] /= 2.0f;
+
+}
+Eigen::Vector3f rst::rasterizer::get_pixel(const Eigen::Vector3f& point)
+{
+	auto ind = (point.y()) * width + width - 1 - point.x();
+    return frame_buf[ind];
+}
+
 // clang-format on
