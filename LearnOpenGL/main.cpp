@@ -197,9 +197,11 @@ unsigned int getCompiledVertShader()
 {
 	const char* vertexShaderSource = "#version 330 core \n"
 									  "layout(location = 0) in vec3 aPos;\n"
+									  "out vec4 vertexColor;"
 									  "void main()\n"
 									  "{\n"
 									  "	gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+									  "vertexColor = normalize(gl_Position);"
 									  "}\0";
 	unsigned int vertexShader;
 	vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -226,11 +228,13 @@ unsigned int getCompiledFragShader(float R, float G, float B, float A)
 {
 	const char* fragmentShaderSource = "#version 330 core\n"
 										"out vec4 FragColor;\n"
+										"in vec4 vertexColor;\n"
 										"void main()\n"
 										"{\n"
-										"	FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+										"	FragColor = vertexColor;\n"
 										"}\0";
-	std::string stdString = "#version 330 core\nout vec4 FragColor;\nvoid main()\n{\nFragColor = vec4(" + std::to_string(R) + ", " + std::to_string(G) + ", " + std::to_string(B) + ", " + std::to_string(A) + ");\n}\0";
+	//std::string stdString = "#version 330 core\nout vec4 FragColor;\nin vec4 vertexColor;\nvoid main()\n{\nFragColor = vec4(" + std::to_string(R) + ", " + std::to_string(G) + ", " + std::to_string(B) + ", " + std::to_string(A) + ");\n}\0";
+	std::string stdString = "#version 330 core\nout vec4 FragColor;\nin vec4 vertexColor;\nvoid main()\n{\nFragColor = vertexColor;\n}\0";
 	const char* fragShaderShource = stdString.data();
 	
 		
