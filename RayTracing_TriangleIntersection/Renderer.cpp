@@ -214,7 +214,9 @@ void Renderer::Render(const Scene& scene)
 {
     std::vector<Vector3f> framebuffer(scene.width * scene.height);
 
+    // 控制视野范围
     float scale = std::tan(deg2rad(scene.fov * 0.5f));
+    // 长宽比例, 
     float imageAspectRatio = scene.width / (float)scene.height;
 
     // Use this variable as the eye position to start your rays.
@@ -245,12 +247,23 @@ void Renderer::Render(const Scene& scene)
     FILE* fp = fopen("binary.ppm", "wb");
     (void)fprintf(fp, "P6\n%d %d\n255\n", scene.width, scene.height);
 
+    cv::Mat image(scene.height, scene.width, CV_8UC3, cv::Scalar(0, 0, 0));
+
     for (auto i = 0; i < scene.height * scene.width - 1; ++i) {
+        uchar* currentPos = image.data + i*3;
+
         static unsigned char color[3];
-        color[0] = (char)(255 * clamp(0, 1, framebuffer[i].x));
-        color[1] = (char)(255 * clamp(0, 1, framebuffer[i].y));
-        color[2] = (char)(255 * clamp(0, 1, framebuffer[i].z));
+
+        *currentPos = color[0] = (char)(255 * clamp(0, 1, framebuffer[i].x));
+        *(currentPos+1 )= color[1] = (char)(255 * clamp(0, 1, framebuffer[i].y));
+        *(currentPos+2) = color[2] = (char)(255 * clamp(0, 1, framebuffer[i].z));
+
         fwrite(color, 1, 3, fp);
     }
-    fclose(fp);    
+    fclose(fp);  
+    
+    cv::cvtColor(image, image, cv::COLOR_RGB2BGR);
+    cv::imshow("image", image);
+    cv::waitKey(0);
+    cv::imwrite("output.jpg", image);
 }
