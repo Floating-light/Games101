@@ -4,5 +4,5 @@ in vec4 vertexColor;
 uniform vec4 colorChanged;
 void main()
 {
-    FragColor = colorChanged;
+    FragColor = vertexColor;
 }

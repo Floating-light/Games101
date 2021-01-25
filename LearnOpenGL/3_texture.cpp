@@ -6,7 +6,6 @@
 
 #include "Shaders/Shader.h"
 
-#define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -79,7 +78,60 @@ std::vector<unsigned int>& GetIndices()
 												1,2,3 };
 	return indices;
 }
+void ConfigTexture()
+{
+	unsigned int textureID;
+	/*
+	* param1 生成多少个texture
+	* param2 一个ID指针, 生成多少个texture就会有多少个元素, 该指针指向第一个ID, 这里只有一个, 所以直接给个局部变量的地址也可以
+	*/
+	glGenTextures(1, &textureID);
 
+	// 绑定创建的texture到GL_TEXTURE_2D, 后面所有对GL_TEXTURE_2D的操作将都是对textureID所指向的Texture.
+	glBindTexture(GL_TEXTURE_2D, textureID);
+
+	// 当纹理坐标u, v超出[0，1]时的处理方式.
+	// GL_REPEAT 重复
+	// GL_MIRRORED_REPEAT 镜像重复
+	// GL_CLAMP_TO_EDGE 超出部分用边缘值填充
+	// GL_CLAMP_TO_BORDER 超出部分用自己设置的值
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+
+	float borderColor[] = { 1.0f, 1.0f, 0.0f, 1.0f };
+	glTexParameterfv(GL_TEXTURE_2D, GL_CLAMP_TO_BORDER, borderColor); // 如果上面用了GL_CLAMP_TO_BORDER, 则要这样指定边界颜色
+
+	// 纹理放大和纹理minification(supersampling), 图片太大
+	// GL_TEXTURE_MIN_FILTER texture 范围查询, 模型过小, 纹理分辨率过大, 用mipmap + 3线性插值
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // 纹理放大, 双线性插值
+
+	int width, height, nrChannels;
+	unsigned char* data = stbi_load("./model/spot_texture.png", &width, &height, &nrChannels, 0);
+
+	if (data != nullptr)
+	{
+		/*
+		* param1 指定这次操作的目标, GL_TEXTURE_2D, GL_TEXTURE_1D, GL_TEXTURE_3D
+		* param2 当前读入图片mipmap 层级,如果手动读入不同层级则增加这个值
+		* param3 texture 保存的图像格式, 可从原图像转过来
+		* param4 param5 texture 的长和宽
+		* param6 always 0, some legacy stuff.
+		* param7 原图片数据的格式
+		* param8 原图片的数据类型
+		* param9 原图片数据
+		*/
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D); // 自动生成Mipmap
+		stbi_image_free(data);
+	}
+	else
+	{
+		std::cout << "Failed to load texture" << std::endl;
+	}
+
+
+}
 // 先配置好所有要用的VBO, attributes pointers 为VAO, 然后保存这些VAO, 后面再用. 
 void ConfigVertexArrayObejcts(unsigned int& VAO, unsigned int& VBO, unsigned int& EBO)
 {
@@ -128,7 +180,7 @@ void ConfigVertexArrayObejct_Gen(unsigned int& VAO, unsigned int& VBO, InputVert
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3* sizeof(float)));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 
 	// 在unbind VAO之前都不能unbind EBO
@@ -136,6 +188,8 @@ void ConfigVertexArrayObejct_Gen(unsigned int& VAO, unsigned int& VBO, InputVert
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 }
+
+
 int main()
 {
 	// Init glfw
@@ -195,10 +249,10 @@ int main()
 		//glUseProgram(shaderPrograme);
 		shader.use();
 		float timeValue = glfwGetTime();
-		float greenValue = abs(sin(timeValue*5) / 2.0f) + 0.5f;
+		float greenValue = abs(sin(timeValue * 5) / 2.0f) + 0.5f;
 		// must use this shader first
 		shader.setVec4("colorChanged", 0.0f, greenValue, 0.0f, 0.0f);
-		shader.setFloat("offset", timeValue );
+		shader.setFloat("offset", timeValue);
 		glBindVertexArray(VAO);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 		glBindVertexArray(0);

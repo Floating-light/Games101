@@ -96,12 +96,12 @@ void ConfigVertexBufferObjects(float *v = nullptr)
 	// 告诉GL 如何将 GL_ARRAY_BUFFER 中的顶点数据的属性和vertex shader 的输入数据关联起来
 	/*
 	* 设置当前GL_ARRAY_BUFFER 绑定的VBO的数据的解析方式
-	* @param1 想要配置的顶点属性的内存偏移, 偏移量0, 和vert shader 中的 layout location = 0, 对应
+	* @param1 想要配置的第几个vertex属性, 和vert shader 中的 layout location = 0, 对应
 	* @param2 这个属性的数量, 有3个值, vec3 有三个值
 	* @param3 每个值的类型, float, vec3 的每个坐标的类型都是float
 	* @param4 是否normalized这些数据, 如果为GL_TRUE, 且输入的Integer(int, byte), 在转为float时, integer 会被normalized为-1(如果为signed data), 0, 1.
-	* @param5 stride(步长), 连续vertex Attribute 之间的space. 这里仅隔了三个浮点数, 且之间没有其它空隙(这种情况下还可以设置为0, 让gl 自己决定),要注意内存布局.
-	* @param6 数据在buffer 中起始位置的偏移
+	* @param5 stride(步长), 相邻同一个类型的vertex Attribute 之间的space. 这里仅隔了三个浮点数, 且之间没有其它空隙(这种情况下还可以设置为0, 让gl 自己决定),要注意内存布局.
+	* @param6 数据在buffer 中, 每完整的一组数据中的偏移
 	*/
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	// enable 指定location 的vertex attribute
