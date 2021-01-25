@@ -75,6 +75,7 @@ std::vector<unsigned int>& GetIndices()
 												1,2,3 };
 	return indices;
 }
+
 // ABORT
 void ConfigVertexBufferObjects(float *v = nullptr)
 {

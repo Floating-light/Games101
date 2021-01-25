@@ -15,7 +15,7 @@ public:
 	unsigned int ID;
 
 	// constructor reads and builds the shader
-	Shader(const char* vertexPath, const char* fragmentPath);
+	Shader(const std::string& vertexPath, const std::string& fragmentPath);
 
 	// use/activate the shader
 	void use();
@@ -27,5 +27,6 @@ public:
 
 	void setFloat(const std::string& name, float value) const;
 
+	void setVec4(const std::string& name, float x, float y, float z, float w);
 };
 
