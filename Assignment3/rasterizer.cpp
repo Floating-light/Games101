@@ -284,6 +284,8 @@ void rst::rasterizer::rasterize_triangle(const Triangle& t, const std::array<Eig
             {
                 // 重心坐标barycentrix cooridinates
                 float alpha, beta, gamma;
+                // x, y, v[3] 都是经历了所有投影 model , view, projection, viewport变换后的坐标
+                // 所以仅取x, y来算就可以
                 std::tie(alpha, beta, gamma) = computeBarycentric2D(x, y, t.v);
                 //auto[alpha, beta, gamma] = computeBarycentric2D(x, y, t.v);
                 float Z = 1.0 / (alpha / v[0].w() + beta / v[1].w() + gamma / v[2].w());

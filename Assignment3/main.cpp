@@ -157,13 +157,16 @@ Eigen::Vector3f texture_fragment_shader(const fragment_shader_payload& payload)
         const Eigen::Vector3f l = (light.position - point).normalized();
         const Eigen::Vector3f v = (eye_pos - point).normalized();
 
+        // 环境光 ka * I
         Eigen::Vector3f ambient = ka.cwiseProduct(amb_light_intensity);
 
+        // 漫反射光 kd * I/r^2 * max(0.f, l . n)
         Eigen::Vector3f diffuse = kd.cwiseProduct(light.intensity / r_r) * std::max(0.f, l.dot(normal));
 
-        // 半程法向量
+        // 半程法向量 和 着色点的接近程度
         Eigen::Vector3f h = (l + v).normalized();
         float nh = std::max(0.f, normal.dot(h));
+        // 高光 ks * I/r^2 * nh^p
         Eigen::Vector3f specular = ks.cwiseProduct(light.intensity / r_r) * pow(nh, p);
 
         result_color += (ambient + diffuse + specular);
@@ -222,8 +225,6 @@ Eigen::Vector3f phong_fragment_shader(const fragment_shader_payload& payload)
     //result_color = result_color.normalized();
     return result_color * 255.f;
 }
-
-
 
 Eigen::Vector3f displacement_fragment_shader(const fragment_shader_payload& payload)
 {
@@ -303,7 +304,6 @@ Eigen::Vector3f displacement_fragment_shader(const fragment_shader_payload& payl
     return result_color * 255.f;
 }
 
-
 Eigen::Vector3f bump_fragment_shader(const fragment_shader_payload& payload)
 {
     Eigen::Vector3f ka = Eigen::Vector3f(0.005, 0.005, 0.005);
@@ -373,6 +373,7 @@ Eigen::Vector3f bump_fragment_shader(const fragment_shader_payload& payload)
 
         result_color += (ambient + diffuse + specular);
     }
+
     return result_color * 255.f;
 }
 
@@ -385,10 +386,12 @@ int main(int argc, const char** argv)
 
     std::string filename = "output.png";
     objl::Loader Loader;
-    std::string obj_path = "./models/spot/";
+    //std::string obj_path = "./models/spot/";
+    std::string obj_path = "./models/Crate/";
 
     // Load .obj File
-    bool loadout = Loader.LoadFile("./models/spot/spot_triangulated_good.obj");
+    //bool loadout = Loader.LoadFile("./models/spot/spot_triangulated_good.obj");
+    bool loadout = Loader.LoadFile("./models/Crate/Crate1.obj");
     for(auto mesh:Loader.LoadedMeshes)
     {
         for(int i=0;i<mesh.Vertices.size();i+=3)
@@ -406,7 +409,8 @@ int main(int argc, const char** argv)
 
     rst::rasterizer r(700, 700);
 
-    auto texture_path = "hmap.jpg";
+    //auto texture_path = "hmap.jpg";
+    auto texture_path = "crate_1.jpg";
     //auto texture_path = "spot_texture.png";
     r.set_texture(Texture(obj_path + texture_path));
 
@@ -422,7 +426,8 @@ int main(int argc, const char** argv)
         {
             std::cout << "Rasterizing using the texture shader\n";
             active_shader = texture_fragment_shader;
-            texture_path = "spot_texture.png";
+            //texture_path = "spot_texture.png";
+            texture_path = "crate_1.jpg";
             r.set_texture(Texture(obj_path + texture_path));
         }
         else if (argc == 3 && std::string(argv[2]) == "normal")
