@@ -48,11 +48,11 @@ std::vector<float>& GetVertices(const InputVertexID Type = InputVertexID::Triang
 		  0.5f, 0.5f, 0.0f,
 		  0.0f, -0.5f, 0.0f };
 
-	// 正方形
-	static std::vector<float > VertRectangle = { 0.5f, 0.5f, 0.0f,
-											  0.5f, -0.5f, 0.0f,
-											  -0.5f, -0.5f, 0.0f,
-											  -0.5f, 0.5f, 0.0f };
+	// 正方形                                     // cooridinate   colors            texture coords
+	static std::vector<float > VertRectangle = { 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
+											     0.5f,-0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+											    -0.5f,-0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 
+											    -0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f};
 	if (Type == InputVertexID::TriangleCenter)
 	{
 		return VertTriangleCenter;
@@ -78,7 +78,7 @@ std::vector<unsigned int>& GetIndices()
 												1,2,3 };
 	return indices;
 }
-void ConfigTexture()
+unsigned int ConfigTexture()
 {
 	unsigned int textureID;
 	/*
@@ -130,13 +130,14 @@ void ConfigTexture()
 		std::cout << "Failed to load texture" << std::endl;
 	}
 
+	return textureID;
 
 }
 // 先配置好所有要用的VBO, attributes pointers 为VAO, 然后保存这些VAO, 后面再用. 
 void ConfigVertexArrayObejcts(unsigned int& VAO, unsigned int& VBO, unsigned int& EBO)
 {
 	//float* vertices = GetVertices(); // 无法返回完整的数组, 会被当成一个数.
-	auto& vvector = GetVertices(InputVertexID::TriangleCenter);
+	auto& vvector = GetVertices(InputVertexID::Rectangle);
 	auto& indices = GetIndices();
 
 	glGenVertexArrays(1, &VAO);
@@ -152,8 +153,17 @@ void ConfigVertexArrayObejcts(unsigned int& VAO, unsigned int& VBO, unsigned int
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	// vertex coor
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
+
+	// color
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3*sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	// texture coor, u, v
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6*sizeof(float)));
+	glEnableVertexAttribArray(2);
 
 	// 在unbind VAO之前都不能unbind EBO
 	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); // error VAO also remenber the unbind
@@ -176,12 +186,18 @@ void ConfigVertexArrayObejct_Gen(unsigned int& VAO, unsigned int& VBO, InputVert
 	glBufferData(GL_ARRAY_BUFFER, data.size() * sizeof(float), data.data(), GL_STATIC_DRAW);
 	//glBufferData(GL_ARRAY_BUFFER, vvector.size() * sizeof(float) , vvector.data(), GL_STATIC_DRAW);
 
-
+	// vertex cooridinate
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
+	// color
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
+
+	// texture coor, u,v
+	/*glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glEnableVertexAttribArray(2);*/
+
 
 	// 在unbind VAO之前都不能unbind EBO
 	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); // error VAO also remenber the unbind
@@ -227,16 +243,16 @@ int main()
 	// vertex array object, vertex buffer object, element buffer object
 	unsigned int VAO, VBO, EBO;
 	// Exercises 2
-	ConfigVertexArrayObejct_Gen(VAO, VBO, InputVertexID::TriangleLeft);
+	ConfigVertexArrayObejcts(VAO, VBO, EBO);
 
-	unsigned int VAO2, VBO2;
-	ConfigVertexArrayObejct_Gen(VAO2, VBO2, InputVertexID::TriangleRight);
+	/*unsigned int VAO2, VBO2;
+	ConfigVertexArrayObejct_Gen(VAO2, VBO2, InputVertexID::TriangleRight);*/
 
 
 	// wireframe rendering
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
+	unsigned int TextureID = ConfigTexture();
 	// render loop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -248,13 +264,15 @@ int main()
 
 		//glUseProgram(shaderPrograme);
 		shader.use();
-		float timeValue = glfwGetTime();
-		float greenValue = abs(sin(timeValue * 5) / 2.0f) + 0.5f;
-		// must use this shader first
-		shader.setVec4("colorChanged", 0.0f, greenValue, 0.0f, 0.0f);
-		shader.setFloat("offset", timeValue);
+		//float timeValue = glfwGetTime();
+		//float greenValue = abs(sin(timeValue * 5) / 2.0f) + 0.5f;
+		//// must use this shader first
+		//shader.setVec4("colorChanged", 0.0f, greenValue, 0.0f, 0.0f);
+		//shader.setFloat("offset", timeValue);
 		glBindVertexArray(VAO);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glBindTexture(GL_TEXTURE_2D, TextureID);
+		//glDrawArrays(GL_TRIANGLES, 0, 3);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
 
 		/*shader.setVec4("colorChanged", 0.0f, greenValue, 0.0f, 1.0f);
