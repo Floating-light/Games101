@@ -8,16 +8,27 @@
 
 #include "stb_image.h"
 
+float currentVisible = 0.2;
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
 }
 
-void processInput(GLFWwindow* window)
+void processInput(GLFWwindow* window, const Shader& shader)
 {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 	{
 		glfwSetWindowShouldClose(window, true);
+	}
+	else if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+	{
+		shader.setFloat("visible", (currentVisible += 0.1));
+	}
+	else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+	{
+		shader.setFloat("visible", (currentVisible -= 0.1));
+
 	}
 }
 
@@ -78,6 +89,47 @@ std::vector<unsigned int>& GetIndices()
 												1,2,3 };
 	return indices;
 }
+
+void ReadImageToTexture(const std::string& imagePath, GLenum textureUnit, GLenum& textureID, GLenum sourceFormat)
+{
+	glGenTextures(1, &textureID);
+
+	glActiveTexture(textureUnit);
+
+	glBindTexture(GL_TEXTURE_2D, textureID);
+	float borderColor[] = { 1.0f, 0.0f, 0.0f, 0.5f };
+	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor); // 如果上面用了GL_CLAMP_TO_BORDER, 则要这样指定边界颜色
+	// 设置边界
+	/*
+	*	GL_REPEAT
+	*	GL_MIRRORED_REPEAT
+	*	GL_CLAMP_TO_EDGE
+	*	GL_CLAMP_TO_BORDER
+	*/
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+	// texture 采样
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+
+
+	int width, height, channels;
+	stbi_set_flip_vertically_on_load(true); // image y 方向翻转.
+	unsigned char* data = stbi_load(imagePath.data(), &width, &height, &channels, 0);
+	if (data)
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, sourceFormat, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+	{
+		std::cout << "Failed to load texture : " << imagePath << std::endl;
+	}
+	stbi_image_free(data);
+}
+// 配置Texture unit
 unsigned int ConfigTexture()
 {
 	unsigned int textureID;
@@ -87,6 +139,8 @@ unsigned int ConfigTexture()
 	*/
 	glGenTextures(1, &textureID);
 
+	// GL_TEXTURE0 ~~~ GL_TEXTURE15 都是连续的
+	glActiveTexture(GL_TEXTURE0);
 	// 绑定创建的texture到GL_TEXTURE_2D, 后面所有对GL_TEXTURE_2D的操作将都是对textureID所指向的Texture.
 	glBindTexture(GL_TEXTURE_2D, textureID);
 
@@ -99,12 +153,12 @@ unsigned int ConfigTexture()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
 
 	float borderColor[] = { 1.0f, 1.0f, 0.0f, 1.0f };
-	glTexParameterfv(GL_TEXTURE_2D, GL_CLAMP_TO_BORDER, borderColor); // 如果上面用了GL_CLAMP_TO_BORDER, 则要这样指定边界颜色
+	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor); // 如果上面用了GL_CLAMP_TO_BORDER, 则要这样指定边界颜色
 
 	// 纹理放大和纹理minification(supersampling), 图片太大
 	// GL_TEXTURE_MIN_FILTER texture 范围查询, 模型过小, 纹理分辨率过大, 用mipmap + 3线性插值
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // 纹理放大, 双线性插值
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); // 纹理放大, 双线性插值
 
 	int width, height, nrChannels;
 	unsigned char* data = stbi_load("./model/spot_texture.png", &width, &height, &nrChannels, 0);
@@ -131,7 +185,6 @@ unsigned int ConfigTexture()
 	}
 
 	return textureID;
-
 }
 // 先配置好所有要用的VBO, attributes pointers 为VAO, 然后保存这些VAO, 后面再用. 
 void ConfigVertexArrayObejcts(unsigned int& VAO, unsigned int& VBO, unsigned int& EBO)
@@ -180,6 +233,8 @@ void ConfigVertexArrayObejct_Gen(unsigned int& VAO, unsigned int& VBO, InputVert
 	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
 
+
+
 	glGenBuffers(1, &VBO);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -204,7 +259,6 @@ void ConfigVertexArrayObejct_Gen(unsigned int& VAO, unsigned int& VBO, InputVert
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 }
-
 
 int main()
 {
@@ -252,25 +306,38 @@ int main()
 	// wireframe rendering
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	unsigned int TextureID = ConfigTexture();
+	unsigned int TextureID0, TextureID1;
+	ReadImageToTexture("./resources/textures/container.jpg", GL_TEXTURE0, TextureID0, GL_RGB);
+	//ReadImageToTexture("./resources/textures/wood.png", GL_TEXTURE1, TextureID1, GL_RGB);
+	ReadImageToTexture("./resources/textures/awesomeface.png", GL_TEXTURE1, TextureID1, GL_RGBA);
+
+	glUniform1f(glGetUniformLocation(shader.ID, "visible"), currentVisible);
+
 	// render loop
 	while (!glfwWindowShouldClose(window))
 	{
 		// 处理指定window 的输入
-		processInput(window);
+		processInput(window, shader);
 
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		//glUseProgram(shaderPrograme);
 		shader.use();
+		glUniform1i(glGetUniformLocation(shader.ID, "baseColorTexture"), 0);
+		shader.setInteger("anotherTex", 1);
 		//float timeValue = glfwGetTime();
 		//float greenValue = abs(sin(timeValue * 5) / 2.0f) + 0.5f;
 		//// must use this shader first
 		//shader.setVec4("colorChanged", 0.0f, greenValue, 0.0f, 0.0f);
 		//shader.setFloat("offset", timeValue);
 		glBindVertexArray(VAO);
-		glBindTexture(GL_TEXTURE_2D, TextureID);
+
+		/*glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, TextureID0);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, TextureID1);*/
+
 		//glDrawArrays(GL_TRIANGLES, 0, 3);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
@@ -293,3 +360,6 @@ int main()
 
 	return 0;
 }
+
+
+/** *****************************************************************************************************/

@@ -1,4 +1,5 @@
 #include "Shader.h"
+#include <glad/glad.h>
 
 static const std::string ShaderFloder = "./Shaders/";
 
