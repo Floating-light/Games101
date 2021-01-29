@@ -1,5 +1,9 @@
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
+
+#include "ft2build.h"
+#include FT_FREETYPE_H
+
 #include <iostream>
 #include <vector>
 #include <string>
@@ -76,9 +80,9 @@ std::vector<float>& GetVertices(const InputVertexID Type = InputVertexID::Triang
 
 	// 正方形                                     // cooridinate   colors            texture coords
 	static std::vector<float > VertRectangle = { 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
-											     0.5f,-0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
-											    -0.5f,-0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 
-											    -0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f};
+												 0.5f,-0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+												-0.5f,-0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+												-0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f };
 	if (Type == InputVertexID::TriangleCenter)
 	{
 		return VertTriangleCenter;
@@ -226,11 +230,11 @@ void ConfigVertexArrayObejcts(unsigned int& VAO, unsigned int& VBO, unsigned int
 	glEnableVertexAttribArray(0);
 
 	// color
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3*sizeof(float)));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 
 	// texture coor, u, v
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6*sizeof(float)));
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
 	glEnableVertexAttribArray(2);
 
 	// 在unbind VAO之前都不能unbind EBO
@@ -273,6 +277,26 @@ void ConfigVertexArrayObejct_Gen(unsigned int& VAO, unsigned int& VBO, InputVert
 	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); // error VAO also remenber the unbind
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
+}
+
+void ConfigFonts()
+{
+	FT_Library ft;
+	if (FT_Init_FreeType(&ft))
+	{
+		std::cout << "ERROR::FREERTPE: Could not init FreeType Library" << std::endl;
+	}
+	FT_Face face;
+	if (FT_New_Face(ft, "resource/fonts/arial.ttf", 0, &face))
+	{
+		std::cout << "ERROR::FREETYPE: Failed to load font" << std::endl;
+	}
+	FT_Set_Pixel_Sizes(face, 0, 48);
+	if (FT_Load_Char(face, 'X', FT_LOAD_RENDER))
+	{
+		std::cout << "ERROR::FREETYPE: Failed to load Glyph" << std::endl;
+	}
+
 }
 
 int main()
