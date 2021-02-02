@@ -5,6 +5,10 @@
 #include FT_FREETYPE_H
 
 #include "glm/vec2.hpp"
+#include "glm/mat4x4.hpp"
+#include "glm/glm.hpp"
+#include "glm/ext/matrix_clip_space.hpp"
+#include "glm/gtc/type_ptr.hpp"
 
 #include <iostream>
 #include <vector>
@@ -12,19 +16,19 @@
 #include <map>
 
 #include "Shaders/Shader.h"
-
-#include "stb_image.h"
+#include "utility/TextRender.h"
+#include "utility/stb_image.h"
 
 float currentVisible = 0.2;
 Shader* shad;
 
-struct Character
-{
-	unsigned int TextureID;
-	glm::ivec2 size;
-	glm::ivec2 Bearing;
-	unsigned int Advance;
-};
+//struct Character
+//{
+//	unsigned int TextureID;
+//	glm::ivec2 size;
+//	glm::ivec2 Bearing;
+//	unsigned int Advance;
+//};
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -291,26 +295,35 @@ void ConfigVertexArrayObejct_Gen(unsigned int& VAO, unsigned int& VBO, InputVert
 	glBindVertexArray(0);
 }
 
-void ConfigFonts()
+void ConfigFonts(std::map<char, Character>& Characters, unsigned int &textVAO, unsigned int &textVBO)
 {
 	FT_Library ft;
-	if (FT_Init_FreeType(&ft))
+	if (FT_Init_FreeType(&ft)) // initialize the freetype library
 	{
 		std::cout << "ERROR::FREERTPE: Could not init FreeType Library" << std::endl;
 	}
-	FT_Face face;
-	if (FT_New_Face(ft, "resources/fonts/arial.ttf", 0, &face))
+	FT_Face face; // hosts a collection of glyphs
+	if (FT_New_Face(ft, "resources/fonts/arial.ttf", 0, &face))// load the fonts as a 'face'
 	{
 		std::cout << "ERROR::FREETYPE: Failed to load font" << std::endl;
 	}
+
+	// set the pixel font size to extract,
+	// if width == 0, dynamically calculate the width by given height
 	FT_Set_Pixel_Sizes(face, 0, 48);
+
+	// set active glyph to 'X'
+	// FT_LOAD_RENDER create a 8-bit grayscale bitmap image,
+	// can access via face->glyph->bitmap
 	if (FT_Load_Char(face, 'X', FT_LOAD_RENDER))
 	{
 		std::cout << "ERROR::FREETYPE: Failed to load Glyph" << std::endl;
 	}
-	std::map<char, Character> Characters;
 
+	// opengl 要求textures 4byte对齐, 通常这不成问题, 一个像素RGBA刚好4个bytes.
+	// 但用一个byte来表示一个像素时, 要强制设置对齐为1 byte.
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
 	for (unsigned char c = 0; c < 128; c++)
 	{
 		// load character glyph
@@ -323,6 +336,8 @@ void ConfigFonts()
 		unsigned int texture;
 		glGenTextures(1, &texture);
 		glBindTexture(GL_TEXTURE_2D, texture);
+		// 8-bit -- 1-byte 灰度图
+		// 通过将texture color's red component(color vector 中的第一个byte) 视作灰度图像中的一个byte.
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, face->glyph->bitmap.width, face->glyph->bitmap.rows, 0, GL_RED, GL_UNSIGNED_BYTE, face->glyph->bitmap.buffer);
 		// set texture options 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -338,6 +353,69 @@ void ConfigFonts()
 		};
 		Characters.insert(std::pair<char, Character>(c, character));
 	}
+	FT_Done_Face(face);
+	FT_Done_FreeType(ft);
+
+	// for render text
+	glGenVertexArrays(1, &textVAO);
+	glGenBuffers(1, &textVBO);
+
+	glBindVertexArray(textVAO);
+
+	glBindBuffer(GL_ARRAY_BUFFER, textVBO);
+	// 动态改变内存中的内容
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, NULL, GL_DYNAMIC_DRAW);
+
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+}
+
+void RenderText(Shader& s, std::string text, float x, float y, float scale, glm::vec3 color, std::map<char, Character>& Characters, const unsigned int &VAO, const unsigned int & VBO)
+{
+	// active corresponding render state
+	s.use();
+	glUniform3f(glGetUniformLocation(s.ID, "textColor"), color.x, color.y, color.z);
+	glActiveTexture(GL_TEXTURE0);
+	glBindVertexArray(VAO);
+	
+	// iterate through all characters
+	std::string::const_iterator c;
+	for (c = text.begin(); c != text.end(); ++c)
+	{
+		Character ch = Characters[*c];
+		float xpos = x + ch.Bearing.x * scale;
+		float ypos = y - (ch.Size.y - ch.Bearing.y) * scale;
+
+		float w = ch.Size.x * scale;
+		float h = ch.Size.y * scale;
+
+		// update VBO for each character
+		float vertices[6][4] = {
+			{ xpos,    ypos + h, 0.0f, 0.0f},
+			{ xpos,    ypos,     0.0f, 1.0f},
+			{ xpos + w, ypos,    1.0f, 1.0f},
+
+			{ xpos,    ypos + h, 0.0f, 0.0f},
+			{ xpos + w, ypos,    1.0f, 1.0f},
+			{ xpos + w, ypos + h, 1.0f, 0.0f}
+		};
+		// render glyph texture over quad
+		glBindTexture(GL_TEXTURE_2D, ch.TextureID);
+		// update content of VBO memory
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+
+		// advance cursors for next glyph (advance is 1/64 pixels)
+		x += (ch.Advance >> 6) * scale; // bitshift by 6 (2^6 = 64)
+	}
+	glBindVertexArray(0);
+	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 int main()
@@ -375,10 +453,20 @@ int main()
 
 	Shader shader("vertex.vert", "fragment.frag");
 	shad = &shader;
+	shader.use();
+	glUniform1f(glGetUniformLocation(shader.ID, "visible"), currentVisible);
+
+
+	/*Shader textShader("glyphs.vert", "glyphs.frag");
+	textShader.use();
+	glm::mat4 projection = glm::ortho(0.0f, 800.0f, 0.0f, 600.0f);
+	glUniformMatrix4fv(glGetUniformLocation(textShader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));*/
+
 	// vertex array object, vertex buffer object, element buffer object
 	unsigned int VAO, VBO, EBO;
 	// Exercises 2
 	ConfigVertexArrayObejcts(VAO, VBO, EBO);
+
 
 	/*unsigned int VAO2, VBO2;
 	ConfigVertexArrayObejct_Gen(VAO2, VBO2, InputVertexID::TriangleRight);*/
@@ -392,9 +480,13 @@ int main()
 	//ReadImageToTexture("./resources/textures/wood.png", GL_TEXTURE1, TextureID1, GL_RGB);
 	ReadImageToTexture("./resources/textures/awesomeface.png", GL_TEXTURE1, TextureID1, GL_RGBA);
 
-	glUniform1f(glGetUniformLocation(shader.ID, "visible"), currentVisible);
+	//std::map<char, Character> Characters;
+	//unsigned int textVAO, textVBO;
+	//ConfigFonts(Characters, textVAO, textVBO);
+	//glEnable(GL_BLEND);
+	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	ConfigFonts();
+	TextRender textR("resources/fonts/arial.ttf", glm::vec3(0.5f, 0.8f, 0.2f));
 
 	// render loop
 	while (!glfwWindowShouldClose(window))
@@ -407,6 +499,13 @@ int main()
 
 		//glUseProgram(shaderPrograme);
 		shader.use();
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, TextureID0);
+
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, TextureID1);
+
 		glUniform1i(glGetUniformLocation(shader.ID, "baseColorTexture"), 0);
 		shader.setInteger("anotherTex", 1);
 		//float timeValue = glfwGetTime();
@@ -424,6 +523,10 @@ int main()
 		//glDrawArrays(GL_TRIANGLES, 0, 3);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
+
+		textR.RenderText("AHHHHHHHHHHHH", 25.0f, 25.0f, 1.0f);
+		textR.RenderText("textR.RenderText(\"AHHHHHHHHHHHH\", 25.0f, 25.0f, 1.0f);", 0.0f, 576.0f, 0.5f);
+		textR.RenderText("textR.RenderText(\"AHHHHHHHHHHHH\", 25.0f, 25.0f, 1.0f);", 0.0f, 552.0f, 0.5f);
 
 		/*shader.setVec4("colorChanged", 0.0f, greenValue, 0.0f, 1.0f);
 		glBindVertexArray(VAO2);
