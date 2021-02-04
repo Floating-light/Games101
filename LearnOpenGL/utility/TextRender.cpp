@@ -9,7 +9,7 @@
 #include "glm/gtc/type_ptr.hpp"
 
 
-TextRender::TextRender(const std::string& fontPath, const glm::vec3& c)
+TextRender::TextRender(const std::string& fontPath, const glm::vec3& c) : FontSizeHeight(32)
 {
 	Initialize(fontPath, c);
 }
@@ -32,11 +32,35 @@ TextRender::~TextRender()
 void TextRender::Initialize(const std::string& fontPath, const glm::vec3& c)
 {
 	SetFonts(fontPath);
-	SetTextColor(c);
 	InitDraw();
 }
 
-void TextRender::RenderText(const std::string& text, float x, float y, float scale)
+void TextRender::AddScreenDebugMessage(const std::string& Message, glm::vec3 DisplayColor, float DisplayTime, float Scale)
+{
+	DebugMessages.emplace_back(Message, DisplayColor, DisplayTime, Scale);
+}
+
+void TextRender::DrawOnScreenDebugMessage(float DeltaTime)
+{
+	const float FrameSeconds = DeltaTime / 1000.f;
+	float BeginX = 0, BeginY= 0;
+	for (int i = DebugMessages.size() - 1; i >= 0; --i)
+	{
+		ScreenMessageString& Message = DebugMessages[i];
+		BeginY += FontSizeHeight * Message.TextScale;
+		RenderText(Message.Message, Message.Color, BeginX, BeginY, Message.TextScale);
+		Message.CurrentDisplayTime += FrameSeconds;
+		if (Message.CurrentDisplayTime > Message.TimeToDisplay)
+		{
+			DebugMessages.erase(DebugMessages.begin() + i);
+		}
+	}
+	RenderText("Frame rate : " + std::to_string(1.0f / FrameSeconds), glm::vec3(0.0f, 1.0f, 0.0f),600, 500,0.5f);
+	RenderText("Frame time : " + std::to_string(DeltaTime) + " ms" , glm::vec3(0.0f, 1.0f, 0.0f), 600, 440, 0.5f);
+}
+
+
+void TextRender::RenderText(const std::string& text, glm::vec3 Color, float x, float y, float scale)
 {
 	MyTextShader->use();
 
@@ -99,7 +123,7 @@ void TextRender::SetFonts(const std::string& fontPath)
 
 	// set the pixel font size to extract,
 	// if width == 0, dynamically calculate the width by given height
-	FT_Set_Pixel_Sizes(face, 0, 48);
+	FT_Set_Pixel_Sizes(face, 0, FontSizeHeight);
 
 	// set active glyph to 'X'
 	// FT_LOAD_RENDER create a 8-bit grayscale bitmap image,

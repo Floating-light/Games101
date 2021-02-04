@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <map>
+#include <vector>
 
 #include "glm/vec2.hpp"
 #include "glm/vec3.hpp"
@@ -16,6 +17,24 @@ struct Character
 	unsigned int Advance;
 };
 
+struct ScreenMessageString
+{
+	std::string Message;
+	glm::vec3 Color;
+	float TimeToDisplay;
+	float CurrentDisplayTime;
+	float TextScale;
+	ScreenMessageString(const std::string& Messag, glm::vec3 DisplayColor, float DisplayTime, float Scale) :
+		Message(Messag),
+		Color(DisplayColor),
+		TimeToDisplay(DisplayTime),
+		CurrentDisplayTime(0.0f),
+		TextScale(Scale)
+	{
+
+	}
+};
+
 class TextRender
 {
 public:
@@ -25,16 +44,25 @@ public:
 
 	void Initialize(const std::string& fontPath, const glm::vec3& c);
 
-	void RenderText(const std::string& text, float x, float y, float scale);
+	/*
+	* @param text The content to display 
+	* @param Color The Color of the text
+	* @param x , y The begin position of the text to print, left bottom is (0,0)
+	* @param scale 
+	*/
+	void RenderText(const std::string& text, glm::vec3 Color, float x, float y, float scale);
 
-	void SetTextColor(const glm::vec3& c) { Color = c; }
+	void DrawOnScreenDebugMessage(float DeltaTime);
 
 	void SetFonts(const std::string& fontPath);
 
+	void AddScreenDebugMessage(const std::string& Message, glm::vec3 DisplayColor, float DisplayTime, float Scale = 1.0f);
 private:
 	void InitDraw();
 
 private:
+
+	float FontSizeHeight;
 
 	std::map<char, Character> Characters;
 
@@ -44,5 +72,5 @@ private:
 
 	unsigned int VBO;
 
-	glm::vec3 Color;
+	std::vector<ScreenMessageString> DebugMessages;
 };

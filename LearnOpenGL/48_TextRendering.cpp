@@ -14,14 +14,17 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <chrono>
 
 #include "Shaders/Shader.h"
 #include "utility/TextRender.h"
 #include "utility/stb_image.h"
 
+//#define nullptr 100
+
 float currentVisible = 0.2;
 Shader* shad;
-
+TextRender* textRend;
 //struct Character
 //{
 //	unsigned int TextureID;
@@ -30,6 +33,7 @@ Shader* shad;
 //	unsigned int Advance;
 //};
 
+typedef glm::vec3 ColorType;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -41,12 +45,18 @@ void key_callback(GLFWwindow* window, int key, int cancode, int action, int mods
 	if (key == GLFW_KEY_UP && action == GLFW_PRESS)
 	{
 		shad->setFloat("visible", (currentVisible += 0.1));
+		textRend->AddScreenDebugMessage("Set currentVisible as : " + std::to_string(currentVisible), glm::vec3{ 0.0f,0.0f, 0.8f }, 1.0f);
 
 	}
 	else if (key == GLFW_KEY_DOWN && action == GLFW_PRESS)
 	{
 		shad->setFloat("visible", (currentVisible -= 0.1));
+		textRend->AddScreenDebugMessage("Set currentVisible as : " + std::to_string(currentVisible), glm::vec3{ 0.0f,0.0f, 0.8f }, 1.0f);
 
+	}
+	else if (key == GLFW_KEY_P && action == GLFW_PRESS)
+	{
+		textRend->AddScreenDebugMessage("Debug Key pressed", ColorType{ 0.6f, 0.0f, 0.0f }, 2.0f);
 	}
 }
 
@@ -56,13 +66,19 @@ void processInput(GLFWwindow* window, const Shader& shader)
 	{
 		glfwSetWindowShouldClose(window, true);
 	}
-	//else if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-	//{
-	//	shader.setFloat("visible", (currentVisible += 0.1));
-	//}
+	else if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+	{
+		for (int i = 0; i < 1000; ++i)
+		{
+			std::cout << "hahahahahahha" << std::endl;
+		}
+		//shader.setFloat("visible", (currentVisible += 0.1));
+		//textRend->AddScreenDebugMessage("Set currentVisible as : " + std::to_string(currentVisible), glm::vec3{ 0.0f,0.0f, 0.8f }, 1.0f);
+	}
 	//else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
 	//{
 	//	shader.setFloat("visible", (currentVisible -= 0.1));
+	//	textRend->AddScreenDebugMessage("Set currentVisible as : " + std::to_string(currentVisible), glm::vec3{ 0.0f,0.0f, 0.8f }, 1.0f);
 
 	//}
 }
@@ -456,7 +472,6 @@ int main()
 	shader.use();
 	glUniform1f(glGetUniformLocation(shader.ID, "visible"), currentVisible);
 
-
 	/*Shader textShader("glyphs.vert", "glyphs.frag");
 	textShader.use();
 	glm::mat4 projection = glm::ortho(0.0f, 800.0f, 0.0f, 600.0f);
@@ -487,18 +502,23 @@ int main()
 	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	TextRender textR("resources/fonts/arial.ttf", glm::vec3(0.5f, 0.8f, 0.2f));
-
+	textRend = &textR;
+	
+	std::chrono::steady_clock::time_point tp = std::chrono::steady_clock::now();
+	textR.AddScreenDebugMessage("AHHHHHHHHHHHH1_5", { 25.0f, 25.0f, 1.0f }, 5);
+	textR.AddScreenDebugMessage("222222222222_10", { 25.0f, 25.0f, 1.0f }, 10);
+	textR.AddScreenDebugMessage("333333333333_15", { 25.0f, 25.0f, 1.0f }, 15);
 	// render loop
 	while (!glfwWindowShouldClose(window))
 	{
 		// 处理指定window 的输入
+		shader.use();
 		processInput(window, shader);
 
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		//glUseProgram(shaderPrograme);
-		shader.use();
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, TextureID0);
@@ -524,15 +544,17 @@ int main()
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
 
-		textR.RenderText("AHHHHHHHHHHHH", 25.0f, 25.0f, 1.0f);
-		textR.RenderText("textR.RenderText(\"AHHHHHHHHHHHH\", 25.0f, 25.0f, 1.0f);", 0.0f, 576.0f, 0.5f);
-		textR.RenderText("textR.RenderText(\"AHHHHHHHHHHHH\", 25.0f, 25.0f, 1.0f);", 0.0f, 552.0f, 0.5f);
+		
 
 		/*shader.setVec4("colorChanged", 0.0f, greenValue, 0.0f, 1.0f);
 		glBindVertexArray(VAO2);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 		glBindVertexArray(0);*/
+		const auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - tp);
+		tp = std::chrono::steady_clock::now();
+		textR.DrawOnScreenDebugMessage(dur.count());
 
+		shader.use();
 
 		glfwPollEvents(); // keyboard input, mouse movement events
 		glfwSwapBuffers(window); // 交换buffer, 显示最新的渲染结果
