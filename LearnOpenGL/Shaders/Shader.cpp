@@ -1,5 +1,6 @@
 #include "Shader.h"
 #include <glad/glad.h>
+#include "glm/gtc/type_ptr.hpp"
 
 static const std::string ShaderFloder = "./Shaders/";
 
@@ -127,3 +128,7 @@ void Shader::setVec4(const std::string& name, float x, float y, float z, float w
 	glUniform4f(glGetUniformLocation(ID, name.c_str()), x, y, z, w);
 }
 
+void Shader::setMat4(const std::string& name, const glm::mat4& ptr)
+{
+	glUniformMatrix4fv(glGetUniformLocation(ID, name.data()),1, GL_FALSE, glm::value_ptr(ptr));
+}

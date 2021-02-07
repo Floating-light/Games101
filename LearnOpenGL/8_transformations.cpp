@@ -27,6 +27,9 @@
 float currentVisible = 0.2;
 Shader* shad;
 TextRender* textRend;
+float rotationDegree;
+glm::vec3 translate(0.0f, 0.0f, 0.0f);
+glm::vec3 myScale(1.0f, 1.0f, 1.0f);
 //struct Character
 //{
 //	unsigned int TextureID;
@@ -35,7 +38,15 @@ TextRender* textRend;
 //	unsigned int Advance;
 //};
 
-typedef glm::vec3 ColorType;
+namespace ColorType
+{
+	glm::vec3 RED     (1.0f, 0.0f, 0.0f);
+	glm::vec3 GREEN   (0.0f, 1.0f, 0.0f);
+	glm::vec3 BLUE    (0.0f, 0.0f, 1.0f);
+	glm::vec3 YELLOW  (1.0f, 1.0f, 0.0f);
+	glm::vec3 PINK    (1.0f, 0.0f, 1.0f);
+	glm::vec3 PURPLE  (0.6f, 0.0f, 1.0f);
+};
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -58,7 +69,30 @@ void key_callback(GLFWwindow* window, int key, int cancode, int action, int mods
 	}
 	else if (key == GLFW_KEY_P && action == GLFW_PRESS)
 	{
-		textRend->AddScreenDebugMessage("Debug Key pressed", ColorType{ 0.6f, 0.0f, 0.0f }, 2.0f);
+		textRend->AddScreenDebugMessage("Debug Key pressed------>>" + std::to_string(glfwGetTime()), ColorType::PURPLE, 2.0f);
+	}
+	else if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS)
+	{
+		rotationDegree += 5;
+		textRend->AddScreenDebugMessage("Rotate angle : " + std::to_string(rotationDegree), ColorType::PINK, 2);
+	}
+	else if (key == GLFW_KEY_LEFT && action == GLFW_PRESS)
+	{
+		rotationDegree -= 5;
+		textRend->AddScreenDebugMessage("Rotate angle : " + std::to_string(rotationDegree), ColorType::PINK, 2);
+
+	}
+	else if (key == GLFW_KEY_A && action == GLFW_PRESS)
+	{
+		translate.x -= 0.1;
+		textRend->AddScreenDebugMessage("Translate x : " + std::to_string(translate.x), ColorType::YELLOW, 2);
+
+	}
+	else if (key == GLFW_KEY_D && action == GLFW_PRESS)
+	{
+		translate.x += 0.1;
+		textRend->AddScreenDebugMessage("Translate x : " + std::to_string(translate.x), ColorType::YELLOW, 2);
+
 	}
 }
 
@@ -70,10 +104,6 @@ void processInput(GLFWwindow* window, const Shader& shader)
 	}
 	else if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
 	{
-		for (int i = 0; i < 1000; ++i)
-		{
-			std::cout << "hahahahahahha" << std::endl;
-		}
 		//shader.setFloat("visible", (currentVisible += 0.1));
 		//textRend->AddScreenDebugMessage("Set currentVisible as : " + std::to_string(currentVisible), glm::vec3{ 0.0f,0.0f, 0.8f }, 1.0f);
 	}
@@ -182,6 +212,7 @@ void ReadImageToTexture(const std::string& imagePath, GLenum textureUnit, GLenum
 	}
 	stbi_image_free(data);
 }
+
 // 配置Texture unit
 unsigned int ConfigTexture()
 {
@@ -239,6 +270,7 @@ unsigned int ConfigTexture()
 
 	return textureID;
 }
+
 // 先配置好所有要用的VBO, attributes pointers 为VAO, 然后保存这些VAO, 后面再用. 
 void ConfigVertexArrayObejcts(unsigned int& VAO, unsigned int& VBO, unsigned int& EBO)
 {
@@ -313,129 +345,6 @@ void ConfigVertexArrayObejct_Gen(unsigned int& VAO, unsigned int& VBO, InputVert
 	glBindVertexArray(0);
 }
 
-void ConfigFonts(std::map<char, Character>& Characters, unsigned int &textVAO, unsigned int &textVBO)
-{
-	FT_Library ft;
-	if (FT_Init_FreeType(&ft)) // initialize the freetype library
-	{
-		std::cout << "ERROR::FREERTPE: Could not init FreeType Library" << std::endl;
-	}
-	FT_Face face; // hosts a collection of glyphs
-	if (FT_New_Face(ft, "resources/fonts/arial.ttf", 0, &face))// load the fonts as a 'face'
-	{
-		std::cout << "ERROR::FREETYPE: Failed to load font" << std::endl;
-	}
-
-	// set the pixel font size to extract,
-	// if width == 0, dynamically calculate the width by given height
-	FT_Set_Pixel_Sizes(face, 0, 48);
-
-	// set active glyph to 'X'
-	// FT_LOAD_RENDER create a 8-bit grayscale bitmap image,
-	// can access via face->glyph->bitmap
-	if (FT_Load_Char(face, 'X', FT_LOAD_RENDER))
-	{
-		std::cout << "ERROR::FREETYPE: Failed to load Glyph" << std::endl;
-	}
-
-	// opengl 要求textures 4byte对齐, 通常这不成问题, 一个像素RGBA刚好4个bytes.
-	// 但用一个byte来表示一个像素时, 要强制设置对齐为1 byte.
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-	for (unsigned char c = 0; c < 128; c++)
-	{
-		// load character glyph
-		if (FT_Load_Char(face, c, FT_LOAD_RENDER))
-		{
-			std::cout << "ERROR::FREETYPE: Failed to load Glyph" << std::endl;
-			continue;
-		}
-		// generate texture
-		unsigned int texture;
-		glGenTextures(1, &texture);
-		glBindTexture(GL_TEXTURE_2D, texture);
-		// 8-bit -- 1-byte 灰度图
-		// 通过将texture color's red component(color vector 中的第一个byte) 视作灰度图像中的一个byte.
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, face->glyph->bitmap.width, face->glyph->bitmap.rows, 0, GL_RED, GL_UNSIGNED_BYTE, face->glyph->bitmap.buffer);
-		// set texture options 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		// now store character for later use 
-		Character character = {
-			texture,
-			glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
-			glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top),
-			face->glyph->advance.x
-		};
-		Characters.insert(std::pair<char, Character>(c, character));
-	}
-	FT_Done_Face(face);
-	FT_Done_FreeType(ft);
-
-	// for render text
-	glGenVertexArrays(1, &textVAO);
-	glGenBuffers(1, &textVBO);
-
-	glBindVertexArray(textVAO);
-
-	glBindBuffer(GL_ARRAY_BUFFER, textVBO);
-	// 动态改变内存中的内容
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, NULL, GL_DYNAMIC_DRAW);
-
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
-}
-
-void RenderText(Shader& s, std::string text, float x, float y, float scale, glm::vec3 color, std::map<char, Character>& Characters, const unsigned int &VAO, const unsigned int & VBO)
-{
-	// active corresponding render state
-	s.use();
-	glUniform3f(glGetUniformLocation(s.ID, "textColor"), color.x, color.y, color.z);
-	glActiveTexture(GL_TEXTURE0);
-	glBindVertexArray(VAO);
-	
-	// iterate through all characters
-	std::string::const_iterator c;
-	for (c = text.begin(); c != text.end(); ++c)
-	{
-		Character ch = Characters[*c];
-		float xpos = x + ch.Bearing.x * scale;
-		float ypos = y - (ch.Size.y - ch.Bearing.y) * scale;
-
-		float w = ch.Size.x * scale;
-		float h = ch.Size.y * scale;
-
-		// update VBO for each character
-		float vertices[6][4] = {
-			{ xpos,    ypos + h, 0.0f, 0.0f},
-			{ xpos,    ypos,     0.0f, 1.0f},
-			{ xpos + w, ypos,    1.0f, 1.0f},
-
-			{ xpos,    ypos + h, 0.0f, 0.0f},
-			{ xpos + w, ypos,    1.0f, 1.0f},
-			{ xpos + w, ypos + h, 1.0f, 0.0f}
-		};
-		// render glyph texture over quad
-		glBindTexture(GL_TEXTURE_2D, ch.TextureID);
-		// update content of VBO memory
-		glBindBuffer(GL_ARRAY_BUFFER, VBO);
-		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-		glDrawArrays(GL_TRIANGLES, 0, 6);
-
-		// advance cursors for next glyph (advance is 1/64 pixels)
-		x += (ch.Advance >> 6) * scale; // bitshift by 6 (2^6 = 64)
-	}
-	glBindVertexArray(0);
-	glBindTexture(GL_TEXTURE_2D, 0);
-}
-
 int main()
 {
 	// Init glfw
@@ -467,41 +376,19 @@ int main()
 	// 设置指定window 的framebuffer size 的callback.
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetKeyCallback(window, key_callback);
-	//glViewport(0, 0, 800, 600);
+	glViewport(0, 0, 800, 600);
 
 	Shader shader("vertex.vert", "fragment.frag");
 	shad = &shader;
 	shader.use();
 	glUniform1f(glGetUniformLocation(shader.ID, "visible"), currentVisible);
-
-	/*Shader textShader("glyphs.vert", "glyphs.frag");
-	textShader.use();
-	glm::mat4 projection = glm::ortho(0.0f, 800.0f, 0.0f, 600.0f);
-	glUniformMatrix4fv(glGetUniformLocation(textShader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));*/
-
 	// vertex array object, vertex buffer object, element buffer object
 	unsigned int VAO, VBO, EBO;
-	// Exercises 2
 	ConfigVertexArrayObejcts(VAO, VBO, EBO);
 
-
-	/*unsigned int VAO2, VBO2;
-	ConfigVertexArrayObejct_Gen(VAO2, VBO2, InputVertexID::TriangleRight);*/
-
-
-	// wireframe rendering
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	unsigned int TextureID0, TextureID1;
 	ReadImageToTexture("./resources/textures/container.jpg", GL_TEXTURE0, TextureID0, GL_RGB);
-	//ReadImageToTexture("./resources/textures/wood.png", GL_TEXTURE1, TextureID1, GL_RGB);
 	ReadImageToTexture("./resources/textures/awesomeface.png", GL_TEXTURE1, TextureID1, GL_RGBA);
-
-	//std::map<char, Character> Characters;
-	//unsigned int textVAO, textVBO;
-	//ConfigFonts(Characters, textVAO, textVBO);
-	//glEnable(GL_BLEND);
-	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	TextRender textR("resources/fonts/arial.ttf", glm::vec3(0.5f, 0.8f, 0.2f));
 	textRend = &textR;
@@ -510,6 +397,19 @@ int main()
 	textR.AddScreenDebugMessage("AHHHHHHHHHHHH1_5", { 25.0f, 25.0f, 1.0f }, 5);
 	textR.AddScreenDebugMessage("222222222222_10", { 25.0f, 25.0f, 1.0f }, 10);
 	textR.AddScreenDebugMessage("333333333333_15", { 25.0f, 25.0f, 1.0f }, 15);
+
+	// glm 
+	//glm::vec4 vec(1.0f, 0.f, 0.f, 1.0f);
+	//glm::mat4 trans = glm::mat4(1.0f);
+	//trans = glm::translate(trans, glm::vec3(1.0f, 1.0f, 0.0f));
+	//vec = trans * vec;
+	//std::cout << vec.x << ", "<<  vec.y << ", "<< vec.z << std::endl;
+
+	glm::mat4 trans(1.0);
+	trans = glm::rotate(trans, glm::radians(rotationDegree), glm::vec3(0.0f, 0.0f, 1.0f));
+	trans = glm::scale(trans, glm::vec3(0.5f, 0.5f, 0.5f));
+
+	
 	// render loop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -520,45 +420,50 @@ int main()
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		//glUseProgram(shaderPrograme);
-
+		// 绑定纹理到纹理单元
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, TextureID0);
 
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, TextureID1);
 
+		// 绑定纹理单元到shader
 		glUniform1i(glGetUniformLocation(shader.ID, "baseColorTexture"), 0);
 		shader.setInteger("anotherTex", 1);
-		//float timeValue = glfwGetTime();
-		//float greenValue = abs(sin(timeValue * 5) / 2.0f) + 0.5f;
-		//// must use this shader first
-		//shader.setVec4("colorChanged", 0.0f, greenValue, 0.0f, 0.0f);
-		//shader.setFloat("offset", timeValue);
+
+		trans = glm::mat4(1.0f);
+		trans = glm::translate(trans, translate);
+		trans = glm::rotate(trans, glm::radians(rotationDegree + static_cast<float>(glfwGetTime())), glm::vec3(0.0f, 0.0f, 1.0f));
+		trans = glm::scale(trans, glm::vec3(1.0f, 1.0f, 1.0f) * sinf(glfwGetTime()));
+		// trans = trans * translate * rotate * scale
+		// trans * point 注意顺序
+
+		/*
+		* #param transpose 转置
+		*/
+		glUniformMatrix4fv(glGetUniformLocation(shader.ID, "transform"), 1, GL_FALSE, glm::value_ptr(trans));
+		 
+		// 绑定要绘制的vertex
 		glBindVertexArray(VAO);
-
-		/*glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, TextureID0);
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, TextureID1);*/
-
-		//glDrawArrays(GL_TRIANGLES, 0, 3);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
 
-		
 
-		/*shader.setVec4("colorChanged", 0.0f, greenValue, 0.0f, 1.0f);
-		glBindVertexArray(VAO2);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
-		glBindVertexArray(0);*/
+		glm::mat4 trs2(1.0f);
+		trs2 = glm::translate(trs2, glm::vec3(-0.5f, 0.5f, 0.0f));
+		glUniformMatrix4fv(glGetUniformLocation(shader.ID, "transform"), 1, GL_FALSE, glm::value_ptr(trs2));
+
+		glBindVertexArray(VAO);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		glBindVertexArray(0);
+
 		const auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - tp);
 		tp = std::chrono::steady_clock::now();
 		textR.DrawOnScreenDebugMessage(dur.count());
 
-		shader.use();
-
+		shader.use();// 输入需要改变shader中的uniform
 		glfwPollEvents(); // keyboard input, mouse movement events
+
 		glfwSwapBuffers(window); // 交换buffer, 显示最新的渲染结果
 	}
 
