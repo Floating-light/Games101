@@ -42,7 +42,7 @@ void TextRender::AddScreenDebugMessage(const std::string& Message, glm::vec3 Dis
 
 void TextRender::DrawOnScreenDebugMessage(float DeltaTime)
 {
-	const float FrameSeconds = DeltaTime / 1000.f;
+	const float FrameSeconds = DeltaTime;
 	float BeginX = 0, BeginY= 0;
 	for (int i = DebugMessages.size() - 1; i >= 0; --i)
 	{
@@ -56,7 +56,7 @@ void TextRender::DrawOnScreenDebugMessage(float DeltaTime)
 		}
 	}
 	RenderText("Frame rate : " + std::to_string(1.0f / FrameSeconds), glm::vec3(0.0f, 1.0f, 0.0f),600, 500,0.5f);
-	RenderText("Frame time : " + std::to_string(DeltaTime) + " ms" , glm::vec3(0.0f, 1.0f, 0.0f), 600, 440, 0.5f);
+	RenderText("Frame time : " + std::to_string(DeltaTime * 1000.0f) + " ms" , glm::vec3(0.0f, 1.0f, 0.0f), 600, 440, 0.5f);
 }
 
 

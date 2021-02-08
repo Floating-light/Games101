@@ -68,5 +68,6 @@ void RCamera::InputProcess(GLFWwindow* window, float Rate)
 	{
 		Location -= cameraSpeed * Up;
 	}
+	//Location.y = 0.0f;
 }
 

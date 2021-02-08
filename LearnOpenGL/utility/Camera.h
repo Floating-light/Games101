@@ -12,9 +12,11 @@ public:
 		Up(0.0f, 1.0f, 0.0f),
 		RotationRadius(10.0f),
 		FirstMouse(true),
-		sensitivity(0.1f),
+		sensitivity(0.05f),
 		Zoom(45.f),
-		Rotator(0.0f, 0.0f,0.0f)
+		Rotator(0.0f, 0.0f,0.0f),
+		lastX(400.0f),
+		lastY(300.0f)
 	{
 
 	}

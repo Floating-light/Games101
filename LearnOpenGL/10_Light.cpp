@@ -202,13 +202,21 @@ int main()
 	glViewport(0, 0, 800, 600);
 
 	// init shader
-	Shader cubeShader("cube.vert", "cube.frag");
+	Shader cubeShader("lightingCube.vert", "lightingCube.frag");
 	shad = &cubeShader;
+
+	Shader lightShader("lightingCube.vert", "light.frag");
 
 	// creat cube 
 	RSceneObject Obj = RSceneObject::Create3DCube();
 	RSceneObject::CreateVAO(Obj);
 	//KeyEvents.push_back(std::bind(&RSceneObject::InputEvent, &Obj, std::placeholders::_1, std::placeholders::_2));
+
+	RSceneObject lightObj = RSceneObject::Create3DCube();
+	RSceneObject::CreateVAO(lightObj);
+	glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+	lightObj.Translate = lightPos;
+	lightObj.Scale = glm::vec3(0.3f, 0.3f, 0.3f);
 
 	// camera
 	RCamera Camera;
@@ -251,6 +259,11 @@ int main()
 		glBindTexture(GL_TEXTURE_2D, TextureID1);
 
 		cubeShader.use();
+		cubeShader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+		cubeShader.setVec3("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
+		cubeShader.setFloat("ambientStrength", 0.3f);
+		cubeShader.setVec3("lightPos", lightPos);
+		cubeShader.setVec3("eyePos", Camera.Location);
 		Obj.Tick();
 		//Camera.Location = Vector3D(sin(glfwGetTime()) * Camera.RotationRadius, 0.0f, cos(glfwGetTime()) * Camera.RotationRadius);
 		glUniformMatrix4fv(glGetUniformLocation(cubeShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(Obj.GetModelTrasform()));
@@ -258,11 +271,20 @@ int main()
 		glUniformMatrix4fv(glGetUniformLocation(cubeShader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(Camera.GetPerspective()));
 		glUniform1i(glGetUniformLocation(cubeShader.ID, "Texture1"), 0);
 		glUniform1i(glGetUniformLocation(cubeShader.ID, "Texture2"), 1);
-
+		
 		glBindVertexArray(Obj.VAO);
 		//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+		lightShader.use();
+		glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(lightObj.GetModelTrasform()));
+		glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "view"), 1, GL_FALSE, glm::value_ptr(Camera.GetViewTransform()));
+		glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(Camera.GetPerspective()));
+		glBindVertexArray(lightObj.VAO);
+		//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
 		glBindVertexArray(0);
+
 
 		// draw debug text
 		textR.DrawOnScreenDebugMessage(deltaTime);

@@ -71,42 +71,44 @@ void RSceneObject::Tick()
 
 RSceneObject RSceneObject::Create3DCube()
 {
-	return RSceneObject({ -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
-						   0.5f, -0.5f, -0.5f, 1.0f, 0.0f,
-						   0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-						   0.5f, 0.5f, -0.5f, 1.0f, 1.0f, 
-						   -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
-						   -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
-						   -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-						   0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
-						   0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
-						   0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
-						   -0.5f, 0.5f, 0.5f, 0.0f, 1.0f,
-						   -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-						   -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-						   -0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-						   -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-						   -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-						   -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-						   -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-						   0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-						   0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-						   0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-						   0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-						   0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-						   0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-						   -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-						   0.5f, -0.5f, -0.5f, 1.0f, 1.0f,
-						   0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
-						   0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
-						   -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-						   -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-						   -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
-						   0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-						   0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-						   0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-						   -0.5f, 0.5f, 0.5f, 0.0f, 0.0f,
-						   -0.5f, 0.5f, -0.5f, 0.0f, 1.0f });
+	return RSceneObject({ 
+		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f,
+		0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f,
+		0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f,
+		0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f,
+		-0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f,
+		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+		0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f,
+		0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
+		0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
+		-0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
+		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+		-0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+		-0.5f, 0.5f, -0.5f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+		-0.5f, -0.5f, 0.5f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+		-0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 
+		0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+		0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
+		0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+		0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+		0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+		0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f,
+		0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f,
+		0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+		0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+		-0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f,
+		-0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+		0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f,
+		0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+		0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+		-0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
+		-0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f
+		});
 }
 
 void RSceneObject::CreateVAO(RSceneObject& Obj)
@@ -122,11 +124,14 @@ void RSceneObject::CreateVAO(RSceneObject& Obj)
 	glBufferData(GL_ARRAY_BUFFER, Obj.Vertices.size() * sizeof(float), Obj.Vertices.data(), GL_STATIC_DRAW);
 
 	// Set attribute pointer and enable
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
+
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glEnableVertexAttribArray(2);
 
 	// UnBind --> VBO --> VAO
 	glBindVertexArray(0);
