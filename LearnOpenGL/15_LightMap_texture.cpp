@@ -142,8 +142,8 @@ void ReadImageToTexture(const std::string& imagePath, GLenum textureUnit, GLenum
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
 	// texture 采样
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 
 
@@ -202,7 +202,7 @@ int main()
 	glViewport(0, 0, 800, 600);
 
 	// init shader
-	Shader cubeShader("lightingCube.vert", "lightingCube.frag");
+	Shader cubeShader("lightingMap.vert", "lightingMap.frag");
 	shad = &cubeShader;
 
 	Shader lightShader("lightingCube.vert", "light.frag");
@@ -225,15 +225,30 @@ int main()
 	MouseScroll.push_back(std::bind(&RCamera::EventMouseScroll, &Camera, std::placeholders::_1, std::placeholders::_2));
 
 	// load texture
-	unsigned int TextureID0, TextureID1;
-	ReadImageToTexture("./resources/textures/container.jpg", GL_TEXTURE0, TextureID0, GL_RGB);
-	ReadImageToTexture("./resources/textures/awesomeface.png", GL_TEXTURE1, TextureID1, GL_RGBA);
+	unsigned int TextureID0, TextureID1, TextureID2;
+	ReadImageToTexture("./resources/textures/container2.png", GL_TEXTURE0, TextureID0, GL_RGBA);
+	//ReadImageToTexture("./resources/textures/container2_specular.png", GL_TEXTURE1, TextureID1, GL_RGBA);
+	ReadImageToTexture("./resources/textures/container2_specular_colored.png", GL_TEXTURE1, TextureID1, GL_RGBA);
+	ReadImageToTexture("./resources/textures/matrix.jpg", GL_TEXTURE2, TextureID2, GL_RGB);
 
 	// init debug text render
 	TextRender textR("resources/fonts/arial.ttf", glm::vec3(0.5f, 0.8f, 0.2f));
 	textRend = &textR;
 
 	glEnable(GL_DEPTH_TEST);
+
+	glm::vec3 cubePositions[] = {
+	glm::vec3(0.0f,  0.0f,  0.0f),
+	glm::vec3(2.0f,  5.0f, -15.0f),
+	glm::vec3(-1.5f, -2.2f, -2.5f),
+	glm::vec3(-3.8f, -2.0f, -12.3f),
+	glm::vec3(2.4f, -0.4f, -3.5f),
+	glm::vec3(-1.7f,  3.0f, -7.5f),
+	glm::vec3(1.3f, -2.0f, -2.5f),
+	glm::vec3(1.5f,  2.0f, -2.5f),
+	glm::vec3(1.5f,  0.2f, -1.5f),
+	glm::vec3(-1.3f,  1.0f, -1.5f)
+	};
 
 	float deltaTime = 0.0f, lastFrameTime = 0.0f;
 	// glfwGetTime()
@@ -257,36 +272,58 @@ int main()
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, TextureID1);
 
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, TextureID2);
+
 		cubeShader.use();
-		cubeShader.setVec3("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
 		cubeShader.setVec3("eyePos", Camera.Location);
 
-		glm::vec3 lightColor(sin(glfwGetTime() * 2.0f), sin(glfwGetTime() * 0.7f), sin(glfwGetTime() * 1.3f));
+		//glm::vec3 lightColor(sin(glfwGetTime() * 2.0f), sin(glfwGetTime() * 0.7f), sin(glfwGetTime() * 1.3f));
+		glm::vec3 lightColor(1.0f, 1.0f, 1.0f);
 
 		cubeShader.setVec3("light.position", lightObj.Translate);
+		cubeShader.setVec3("light.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
 		/*cubeShader.setVec3("light.ambient", lightColor * glm::vec3(0.5f)* glm::vec3(0.2f));
 		cubeShader.setVec3("light.diffuse", lightColor * glm::vec3(0.5f));*/
 		cubeShader.setVec3("light.ambient", glm::vec3(1.0f, 1.0f, 1.0f));
 		cubeShader.setVec3("light.diffuse", glm::vec3(1.0f, 1.0f, 1.0f));
 		cubeShader.setVec3("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+		cubeShader.setFloat("light.constant", 1.0f);
+		cubeShader.setFloat("light.linear", 0.09f);
+		cubeShader.setFloat("light.quadratic", 0.032f);
 
-		cubeShader.setVec3("material.ambient", glm::vec3(0.0f, 0.1f, 0.06f));
-		cubeShader.setVec3("material.diffuse", glm::vec3(0.0f, 0.50980392f, 0.50980392f));
-		cubeShader.setVec3("material.specular", glm::vec3(0.50196078f, 0.50196078f, 0.50196078f));
+		cubeShader.setVec3("light.spotPosition", Camera.Location);
+		cubeShader.setVec3("light.spotDirection", Camera.Front);
+		cubeShader.setFloat("light.cutOff", glm::cos(glm::radians(12.5f)));
+		cubeShader.setFloat("light.outerCutOff", glm::cos(glm::radians(17.5f)));
+
+		cubeShader.setInteger("material.diffuse", 0);
+		cubeShader.setInteger("material.specular", 1);
 		cubeShader.setFloat("material.shininess", 128.0f);
+		cubeShader.setInteger("emissionV", 2);
 		Obj.Tick();
 
 		//Camera.Location = Vector3D(sin(glfwGetTime()) * Camera.RotationRadius, 0.0f, cos(glfwGetTime()) * Camera.RotationRadius);
 		glUniformMatrix4fv(glGetUniformLocation(cubeShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(Obj.GetModelTrasform()));
 		glUniformMatrix4fv(glGetUniformLocation(cubeShader.ID, "view"), 1, GL_FALSE, glm::value_ptr(Camera.GetViewTransform()));
 		glUniformMatrix4fv(glGetUniformLocation(cubeShader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(Camera.GetPerspective()));
-		glUniform1i(glGetUniformLocation(cubeShader.ID, "Texture1"), 0);
-		glUniform1i(glGetUniformLocation(cubeShader.ID, "Texture2"), 1);
+		/*glUniform1i(glGetUniformLocation(cubeShader.ID, "Texture1"), 0);
+		glUniform1i(glGetUniformLocation(cubeShader.ID, "Texture2"), 1);*/
 		
+
+
 		glBindVertexArray(Obj.VAO);
 		//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
 
+		for (int i = 0; i < 10; ++i)
+		{
+			glm::mat4 M_model(1.0f);
+			M_model = glm::translate(M_model, cubePositions[i]);
+			float angle = 20.0f * i;
+			M_model = glm::rotate(M_model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+			glUniformMatrix4fv(glGetUniformLocation(cubeShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(M_model));
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
 		// 光源cube
 		lightShader.use();
 		glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(lightObj.GetModelTrasform()));
