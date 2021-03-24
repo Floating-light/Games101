@@ -11,7 +11,7 @@
 class RModel
 {
 public:
-	RModel(char* path)
+	RModel(const std::string& path)
 	{
 		loadModel(path);
 	}

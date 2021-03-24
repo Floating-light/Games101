@@ -12,8 +12,8 @@ unsigned int Utility::TextureFromFile(const std::string& texName, const std::str
 	glGenTextures(1, &textureID);
 
 	glBindTexture(GL_TEXTURE_2D, textureID);
-	float borderColor[] = { 1.0f, 0.0f, 0.0f, 0.5f };
-	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor); // 如果上面用了GL_CLAMP_TO_BORDER, 则要这样指定边界颜色
+	//float borderColor[] = { 1.0f, 0.0f, 0.0f, 0.5f };
+	//glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor); // 如果上面用了GL_CLAMP_TO_BORDER, 则要这样指定边界颜色
 	// 设置边界
 	/*
 	*	GL_REPEAT
@@ -47,7 +47,7 @@ unsigned int Utility::TextureFromFile(const std::string& texName, const std::str
 			sourceFormat = GL_RGBA;
 		}
 
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, sourceFormat, GL_UNSIGNED_BYTE, data);
+		glTexImage2D(GL_TEXTURE_2D, 0, sourceFormat, width, height, 0, sourceFormat, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
 	}
 	else
