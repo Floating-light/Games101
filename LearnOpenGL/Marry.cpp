@@ -283,7 +283,7 @@ int main()
 	lightObj.Scale = glm::vec3(0.3f, 0.3f, 0.3f);
 
 	// New model loaded
-	RModel model("./resources/objects/backpack/backpack.obj");
+	RModel model("./resources/objects/mary/Marry.obj");
 
 	// camera
 	RCamera Camera;

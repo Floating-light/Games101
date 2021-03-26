@@ -63,7 +63,7 @@ RMesh RModel::processMesh(aiMesh* mesh, const aiScene* scene)
 		BVertex vertex;
 		vertex.Position = Vector3D(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
 		vertex.Normal= Vector3D(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z);
-		if (mesh->mTextureCoords[0])
+		if (mesh->mTextureCoords[0]) // the first texture coordinate
 		{
 			vertex.TexCoords = Vector2D(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
 		}
