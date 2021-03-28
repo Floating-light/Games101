@@ -30,6 +30,7 @@ void RCamera::EventMouseMove(double xpos, double ypos)
 	Front.y = sinf(RMath::Radians(Rotator.x));
 	Front.z = sinf(RMath::Radians(Rotator.y)) * cos(RMath::Radians(Rotator.x));
 	Front = RMath::Normalize(Front);
+	
 	/* 动roll up 就不会是固定的*/
 }
 

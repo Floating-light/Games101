@@ -27,7 +27,17 @@ private:
 
 	void processNode(aiNode* node, const aiScene* scene);
 
+	/**
+	* Construct a RMesh, and read all data(Vertex(Position, normal, texture cooridinate), indices, texture) from mesh.
+	*/
 	RMesh processMesh(aiMesh* mesh, const aiScene* scene);
 
+	/**
+	* Load all the texture of type in material.
+	* @param mat the material 
+	* @param type the texture type to load in material.
+	* @param typeName custom name of the texture type.
+	*/
 	std::vector<BTexture> loadMaterialTextures(aiMaterial* mat, aiTextureType type, std::string typeName);
+
 };

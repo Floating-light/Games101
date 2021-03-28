@@ -23,7 +23,6 @@ Matrix4 RMath::ViewTransform(const Vector3D& Eye, const Vector3D& Target, const 
 	const Vector3D graze = RMath::Normalize(Target - Eye);
 	const Vector3D s(RMath::Normalize(RMath::Cross(graze, Up)));
 	const Vector3D u(RMath::Cross(s, graze));
-
 	// 先旋转了
 	// 再平移 ?
 	Matrix4 Result(1.0f);

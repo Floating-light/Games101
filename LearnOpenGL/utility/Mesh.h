@@ -32,12 +32,18 @@ public:
 	RMesh(std::vector<BVertex> vertices, std::vector<unsigned int> indices, std::vector<BTexture> textures);
 
 	// Draw this mesh
+	/**
+	* Draw this mesh, Bind all textures to shader, 
+	*/
 	void Draw(Shader& shader);
 
 private:
 	// render data
 	unsigned int VAO, VBO, EBO;
 
+	/**
+	* Called in Constructor, Setup VAO, VBO, EBO
+	*/
 	void SetupMesh();
 
 };

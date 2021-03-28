@@ -29,12 +29,12 @@ public:
 	void EventMouseMove(double xpos, double ypos);
 	void EventMouseScroll(double xoffset, double yoffset);
 	
-	Matrix4 GetViewTransform()
+	Matrix4 GetViewTransform() const
 	{
 		return RMath::ViewTransform(Location, Location + Front, Up);
 	}
 
-	Matrix4 GetPerspective()
+	Matrix4 GetPerspective() const 
 	{
 		return RMath::PerspectiveTransform(RMath::Radians(Zoom), 800.0f / 600.0f, 0.1f, 100.0f);
 	}

@@ -99,7 +99,7 @@ void mouse_scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 	}
 }
 
-void processInput(GLFWwindow* window, const Shader& shader, float DeltaTime)
+void processInput(GLFWwindow* window, float DeltaTime)
 {
 	for(auto& item: KeyProc)
 	{
@@ -163,10 +163,10 @@ void ReadImageToTexture(const std::string& imagePath, GLenum textureUnit, GLenum
 	stbi_image_free(data);
 }
 
-void SetupMultipleShader(Shader& shader, const RCamera& camera, glm::vec3 pointLightPositions[])
+void SetupMultipleShader(Shader& shader, const RCamera& camera, glm::vec3 pointLightPositions)
 {
 	shader.setVec3("eyePos", camera.Location);
-
+	std::cout << "camera.Location : " << camera.Location.x <<  "    "<<  camera.Location.y << "    " << camera.Location.z << std::endl;
 	shader.setInteger("emissionV", 2);
 
 	// material 
@@ -174,26 +174,20 @@ void SetupMultipleShader(Shader& shader, const RCamera& camera, glm::vec3 pointL
 	shader.setInteger("material.texture_specular1", 1);
 	shader.setFloat("material.shininess", 128.0f);
 
-	// direction light
-	shader.setVec3("dirLight.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
-	shader.setVec3("dirLight.ambient", glm::vec3(0.5f, 0.5f, 0.5f));
-	shader.setVec3("dirLight.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
-	shader.setVec3("dirLight.specular", glm::vec3(0.5f, 0.5f, 0.5f));
-
-	// spotlight
-	shader.setVec3("spotLight.spotPosition", camera.Location);
-	shader.setVec3("spotLight.spotDirection", camera.Front);
-	shader.setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
-	shader.setFloat("spotLight.outCutOff", glm::cos(glm::radians(17.5f)));
-	shader.setVec3("spotLight.ambient", glm::vec3(1.0f, 1.0f, 1.0f));
-	shader.setVec3("spotLight.diffuse", glm::vec3(1.0f, 1.0f, 1.0f));
-	shader.setVec3("spotLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
-
 	// point light
-	shader.setVec3("pointlight[0].position", pointLightPositions[0]);
+	shader.setVec3("pointlight.position", pointLightPositions);
 	/*shader.setVec3("light.ambient", lightColor * glm::vec3(0.5f)* glm::vec3(0.2f));
 	shader.setVec3("light.diffuse", lightColor * glm::vec3(0.5f));*/
-	shader.setVec3("pointlight[0].ambient", glm::vec3(1.0f, 1.0f, 1.0f));
+	
+	shader.setVec3("pointlight.ambient", glm::vec3(1.0f, 1.0f, 1.0f));
+	shader.setVec3("pointlight.diffuse", glm::vec3(0.8f, 0.8f, 0.8f));
+	shader.setVec3("pointlight.specular", glm::vec3(0.0f, 0.0f, 0.0f));
+	shader.setFloat("pointlight.constant", 1.0f);
+	shader.setFloat("pointlight.linear", 0.09f);
+	shader.setFloat("pointlight.quadratic", 0.032f);
+	
+	
+	/*shader.setVec3("pointlight[0].ambient", glm::vec3(1.0f, 1.0f, 1.0f));
 	shader.setVec3("pointlight[0].diffuse", glm::vec3(1.0f, 1.0f, 1.0f));
 	shader.setVec3("pointlight[0].specular", glm::vec3(1.0f, 1.0f, 1.0f));
 	shader.setFloat("pointlight[0].constant", 2.0f);
@@ -222,9 +216,64 @@ void SetupMultipleShader(Shader& shader, const RCamera& camera, glm::vec3 pointL
 	shader.setVec3(" pointlight[3].specular", glm::vec3(0.5f, 0.5f, 0.5f));
 	shader.setFloat("pointlight[3].constant", 2.0f);
 	shader.setFloat("pointlight[3].linear", 0.09f);
-	shader.setFloat("pointlight[3].quadratic", 0.032f);
+	shader.setFloat("pointlight[3].quadratic", 0.032f);*/
 }
 
+void SetupMarryShader(Shader& shader, const RCamera& camera, glm::vec3 lightPosition)
+{
+	shader.setVec3("eyePos", camera.Location);
+	shader.setInteger("emissionV", 2);
+
+	Matrix4 modelTransform(1.0f);
+	glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, glm::value_ptr(modelTransform));
+	glUniformMatrix4fv(glGetUniformLocation(shader.ID, "view"), 1, GL_FALSE, glm::value_ptr(camera.GetViewTransform()));
+	glUniformMatrix4fv(glGetUniformLocation(shader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(camera.GetPerspective()));
+
+	// material 
+	shader.setInteger("material.texture_diffuse1", 0);
+	shader.setInteger("material.texture_specular1", 1);
+	shader.setFloat("material.shininess", 128.0f);
+
+	// point light
+	shader.setVec3("pointlight.position", lightPosition);
+	shader.setVec3("pointlight.ambient", glm::vec3(1.0f, 1.0f, 1.0f));
+	shader.setVec3("pointlight.diffuse", glm::vec3(0.8f, 0.8f, 0.8f));
+	shader.setVec3("pointlight.specular", glm::vec3(0.0f, 0.0f, 0.0f));
+	shader.setFloat("pointlight.constant", 1.0f);
+	shader.setFloat("pointlight.linear", 0.09f);
+	shader.setFloat("pointlight.quadratic", 0.032f);
+}
+
+// the width and height of shadow mapping 
+const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+void MakeDepthMapFBO(unsigned int& depthMapFBO, unsigned int& depthMap)
+{
+	// shadow mapping frame buffer object
+	glGenFramebuffers(1, &depthMapFBO);
+
+	// ~ Begin shadow mapping texture2D
+	glGenTextures(1, &depthMap);
+
+	// Bind depthMap to GL_TEXTURE_2D to setup depthMap.
+	glBindTexture(GL_TEXTURE_2D, depthMap);
+
+	// for shadow mapping , no image source.
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	
+	// set sample method 
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	// ~End 
+
+	// attach this texture as the framebuffer's depth buffer.
+	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+	glDrawBuffer(GL_NONE); // tell opengl not to render any color data.
+	glReadBuffer(GL_NONE);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
 
 int main()
 {
@@ -265,18 +314,16 @@ int main()
 
 	glViewport(0, 0, 800, 600);
 
-	// init shader
-	Shader cubeShader("lightingMap.vert", "multipleLighting.frag");
-	shad = &cubeShader;
-
+	// for render light cube .
 	Shader lightShader("lightingCube.vert", "light.frag");
 
-	Shader modelLoadedShader("lightingMap.vert", "modelLoading.frag");
-	//// creat cube 
-	RSceneObject Obj = RSceneObject::Create3DCube();
-	RSceneObject::CreateVAO(Obj);
-	//KeyEvents.push_back(std::bind(&RSceneObject::InputEvent, &Obj, std::placeholders::_1, std::placeholders::_2));
+	// for marry model
+	Shader modelLoadedShader("marry.vert", "marry.frag");
 
+	// for shadow mapping 
+	Shader shadowMappingShader("shadowmapping.vert", "shadowmapping.frag");
+
+	// Light object
 	RSceneObject lightObj = RSceneObject::Create3DCube();
 	RSceneObject::CreateVAO(lightObj);
 	lightObj.Translate = glm::vec3(1.2f, 1.0f, 2.0f);
@@ -284,7 +331,7 @@ int main()
 
 	// New model loaded
 	RModel model("./resources/objects/mary/Marry.obj");
-
+	
 	// camera
 	RCamera Camera;
 	KeyEvents.push_back(std::bind(&RCamera::InputEvent, &Camera, std::placeholders::_1, std::placeholders::_2));
@@ -292,42 +339,21 @@ int main()
 	MouseCursorMove.push_back(std::bind(&RCamera::EventMouseMove, &Camera, std::placeholders::_1, std::placeholders::_2));
 	MouseScroll.push_back(std::bind(&RCamera::EventMouseScroll, &Camera, std::placeholders::_1, std::placeholders::_2));
 
-	// load texture
-	//unsigned int TextureID0, TextureID1, TextureID2;
-	//ReadImageToTexture("./resources/textures/container2.png", GL_TEXTURE0, TextureID0, GL_RGBA);
-	//ReadImageToTexture("./resources/objects/backpack/diffuse.jpg", GL_TEXTURE0, TextureID0, GL_RGB);
-	////ReadImageToTexture("./resources/textures/container2_specular.png", GL_TEXTURE1, TextureID1, GL_RGBA);
-	//ReadImageToTexture("./resources/textures/container2_specular_colored.png", GL_TEXTURE1, TextureID1, GL_RGBA);
-	//ReadImageToTexture("./resources/textures/matrix.jpg", GL_TEXTURE2, TextureID2, GL_RGB);
-
 	// init debug text render
 	TextRender textR("resources/fonts/arial.ttf", glm::vec3(0.5f, 0.8f, 0.2f));
 	textRend = &textR;
 
 	glEnable(GL_DEPTH_TEST);
 
-	glm::vec3 cubePositions[] = {
-		glm::vec3(0.0f,  0.0f,  0.0f),
-		glm::vec3(2.0f,  5.0f, -15.0f),
-		glm::vec3(-1.5f, -2.2f, -2.5f),
-		glm::vec3(-3.8f, -2.0f, -12.3f),
-		glm::vec3(2.4f, -0.4f, -3.5f),
-		glm::vec3(-1.7f,  3.0f, -7.5f),
-		glm::vec3(1.3f, -2.0f, -2.5f),
-		glm::vec3(1.5f,  2.0f, -2.5f),
-		glm::vec3(1.5f,  0.2f, -1.5f),
-		glm::vec3(-1.3f,  1.0f, -1.5f)
-	};
+	// for shadow mapping
+	unsigned int depthFBO, shadowMapping;
+	MakeDepthMapFBO(depthFBO, shadowMapping);
 
-	glm::vec3 pointLightPositions[] = {
-		glm::vec3(0.7f, 0.2f, 2.0f),
-		glm::vec3(2.3f, -3.3f, -4.0f),
-		glm::vec3(-4.0f, 2.0f, -12.0f),
-		glm::vec3(0.0f, 0.0f, -3.0f)
-	};
+	float near_plane = 1.0f, far_plane = 7.5f;
+	glm::mat4 lightprojection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
 
 
-
+	auto iden = Matrix4(1.0f);
 	float deltaTime = 0.0f, lastFrameTime = 0.0f;
 	// glfwGetTime()
 	// render loop
@@ -338,39 +364,59 @@ int main()
 		lastFrameTime = currentTime;
 		//lightObj.Translate = glm::vec3(sin(glfwGetTime()), 1.0f, cos(glfwGetTime()));
 		// 处理指定window 的输入
-		processInput(window, cubeShader, deltaTime);
+		processInput(window, deltaTime);
+
+
 
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
-		glm::vec3 lightColor(1.0f, 1.0f, 1.0f);
-
 		// 光源cube
+		glm::vec3 lightColor(1.0f, 0.5f, 1.0f);
+		lightObj.Translate = glm::vec3(2.f, 3.5f , 0.0f)/**sinf(glfwGetTime())*/;
+
+		// Light space transform 
+		glm::mat4 lightView = glm::lookAt(lightObj.Translate, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		glm::mat4 lightSpaceMatrix = lightprojection * lightView;
+
+
+
+		shadowMappingShader.use();
+		glUniformMatrix4fv(glGetUniformLocation(shadowMappingShader.ID, "lightSpaceMatrix"), 1, GL_FALSE, glm::value_ptr(lightSpaceMatrix));
+		
+		glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+		glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
+		glClear(GL_DEPTH_BUFFER_BIT);
+
+		glUniformMatrix4fv(glGetUniformLocation(shadowMappingShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(Matrix4(1.0f)));
+		model.Draw(shadowMappingShader);
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		// End Shadow mapping
+
+		glViewport(0, 0, 800, 600);
+		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		lightObj.Scale = glm::vec3(0.3f, 0.3f, 0.3f);
 		lightShader.use();
 		glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(lightObj.GetModelTrasform()));
 		glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "view"), 1, GL_FALSE, glm::value_ptr(Camera.GetViewTransform()));
 		glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(Camera.GetPerspective()));
 		lightShader.setVec3("lightColor", lightColor);
 		glBindVertexArray(lightObj.VAO);
-		//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-		for (int i = 0; i < 4; ++i)
-		{
-			lightObj.Translate = pointLightPositions[i];
-			lightObj.Scale = glm::vec3(0.3f, 0.3f, 0.3f);
-			glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(lightObj.GetModelTrasform()));
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-		}
+		glDrawArrays(GL_TRIANGLES, 0, 36);
 
 		glBindVertexArray(0);
 
+		// My marry model 
 		modelLoadedShader.use();
-		SetupMultipleShader(modelLoadedShader, Camera, pointLightPositions);
-
-		glUniformMatrix4fv(glGetUniformLocation(modelLoadedShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(Obj.GetModelTrasform()));
-		glUniformMatrix4fv(glGetUniformLocation(modelLoadedShader.ID, "view"), 1, GL_FALSE, glm::value_ptr(Camera.GetViewTransform()));
-		glUniformMatrix4fv(glGetUniformLocation(modelLoadedShader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(Camera.GetPerspective()));
+		SetupMarryShader(modelLoadedShader, Camera, lightObj.Translate);
+		
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, shadowMapping);
+		modelLoadedShader.setInteger("shadowmap", 1);
+		glActiveTexture(GL_TEXTURE0);
 		model.Draw(modelLoadedShader);
 
 		// draw debug text

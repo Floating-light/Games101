@@ -8,6 +8,9 @@
 
 #include "glm/glm.hpp"
 
+/**
+* Shader progrm
+*/
 class Shader
 {
 public:

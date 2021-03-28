@@ -25,7 +25,7 @@ void RModel::loadModel(const std::string& path)
 	* aiProcess_SplitLargeMeshes 把大的Mesh 分得更小的, (当单次rendering有顶点数量的限制时)
 	* aiProcess_OptimizeMeshes 把小的Mesh合成一个大的, 可以减少Draw call
 	*/
-	const aiScene* scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
+	const aiScene* scene = import.ReadFile(path, aiProcess_Triangulate );
 
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 	{
@@ -34,6 +34,21 @@ void RModel::loadModel(const std::string& path)
 	}
 	directory = path.substr(0, path.find_last_of('/'));
 	processNode(scene->mRootNode, scene);
+
+	//for (auto& mesh : meshes)
+	//{
+	//	if (mesh.textures.empty())
+	//	{
+	//		for (size_t i = 0; i < textures_loaded.size(); ++i)
+	//		{
+	//			if (textures_loaded[i].type == "texture_diffuse")
+	//			{
+	//				mesh.textures.push_back(textures_loaded[i]);
+	//				break;
+	//			}
+	//		}
+	//	}
+	//}
 }
 
 void RModel::processNode(aiNode* node, const aiScene* scene)
@@ -86,11 +101,13 @@ RMesh RModel::processMesh(aiMesh* mesh, const aiScene* scene)
 	if (mesh->mMaterialIndex >= 0)
 	{
 		aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+		
 		std::vector<BTexture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
 		textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
 
 		std::vector<BTexture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
 		textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
+		//scene->mMaterials
 
 	}
 	return RMesh(vertices, indices, textures);
@@ -99,6 +116,7 @@ RMesh RModel::processMesh(aiMesh* mesh, const aiScene* scene)
 std::vector<BTexture> RModel::loadMaterialTextures(aiMaterial* mat, aiTextureType type, std::string typeName)
 {
 	std::vector<BTexture> textures;
+	// Load all texture of type in this aiMaterial 
 	for (size_t i = 0; i < mat->GetTextureCount(type); i++)
 	{
 		aiString str;
@@ -127,6 +145,8 @@ std::vector<BTexture> RModel::loadMaterialTextures(aiMaterial* mat, aiTextureTyp
 			textures_loaded.push_back(tex);
 		}
 	}
+
+
 	return textures;
 }
 
