@@ -25,6 +25,7 @@
 #include "utility/SceneObject.h"
 #include "utility/Camera.h"
 #include "utility/Model.h"
+#include "utility/Utility.h"
 //#define nullptr 100
 
 float currentVisible = 0.2;
@@ -43,7 +44,7 @@ std::vector<MouseScrollCallBack> MouseScroll;
 //	glm::ivec2 Bearing;
 //	unsigned int Advance;
 //};
-
+void renderQuad();
 namespace ColorType
 {
 	glm::vec3 RED     (1.0f, 0.0f, 0.0f);
@@ -274,7 +275,8 @@ void MakeDepthMapFBO(unsigned int& depthMapFBO, unsigned int& depthMap)
 	glReadBuffer(GL_NONE);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
-
+// meshes
+unsigned int planeVAO;
 int main()
 {
 	// Init glfw
@@ -323,6 +325,9 @@ int main()
 	// for shadow mapping 
 	Shader shadowMappingShader("shadowmapping.vert", "shadowmapping.frag");
 
+	// debug depth map shader
+	Shader debugDepthShader("debugDepthQuad.vert", "debugDepthQuad.frag");
+
 	// Light object
 	RSceneObject lightObj = RSceneObject::Create3DCube();
 	RSceneObject::CreateVAO(lightObj);
@@ -332,6 +337,36 @@ int main()
 	// New model loaded
 	RModel model("./resources/objects/mary/Marry.obj");
 	
+	// plane 
+	float planeVertices[] = {
+		// positions            // normals         // texcoords
+		 25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,  25.0f,  0.0f,
+		-25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
+		-25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,   0.0f, 25.0f,
+
+		 25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,  25.0f,  0.0f,
+		-25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,   0.0f, 25.0f,
+		 25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,  25.0f, 10.0f
+	};
+	// plane VAO
+	unsigned int planeVBO;
+	glGenVertexArrays(1, &planeVAO);
+	glGenBuffers(1, &planeVBO);
+	glBindVertexArray(planeVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), planeVertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glBindVertexArray(0);
+	// end plane
+
+	// Wood texture
+	unsigned int WoodTexture = Utility::TextureFromFile("wood.png", "./resources/textures");
+
 	// camera
 	RCamera Camera;
 	KeyEvents.push_back(std::bind(&RCamera::InputEvent, &Camera, std::placeholders::_1, std::placeholders::_2));
@@ -350,7 +385,7 @@ int main()
 	MakeDepthMapFBO(depthFBO, shadowMapping);
 
 	float near_plane = 1.0f, far_plane = 7.5f;
-	glm::mat4 lightprojection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
+	glm::mat4 lightprojection = glm::ortho(-6.0f, 6.0f, -6.0f, 6.0f, near_plane, far_plane);
 
 
 	auto iden = Matrix4(1.0f);
@@ -373,7 +408,7 @@ int main()
 
 		// 光源cube
 		glm::vec3 lightColor(1.0f, 0.5f, 1.0f);
-		lightObj.Translate = glm::vec3(2.f, 3.5f , 0.0f)/**sinf(glfwGetTime())*/;
+		lightObj.Translate = glm::vec3(2.f*sinf(glfwGetTime()), 3.5f , 3.0f*cosf(glfwGetTime()))/**sinf(glfwGetTime())*/;
 
 		// Light space transform 
 		glm::mat4 lightView = glm::lookAt(lightObj.Translate, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -386,18 +421,34 @@ int main()
 		
 		glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
 		glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
-		glClear(GL_DEPTH_BUFFER_BIT);
-
-		glUniformMatrix4fv(glGetUniformLocation(shadowMappingShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(Matrix4(1.0f)));
-		model.Draw(shadowMappingShader);
-
+			glClear(GL_DEPTH_BUFFER_BIT);
+			// Plane
+			shadowMappingShader.setMat4("model", glm::mat4(1.0f));
+			glBindVertexArray(planeVAO);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+			// Marry
+			glUniformMatrix4fv(glGetUniformLocation(shadowMappingShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(Matrix4(1.0f)));
+			model.Draw(shadowMappingShader);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		// End Shadow mapping
 
+
+
+		// -------------------------------------------
+		// Reset viewport
 		glViewport(0, 0, 800, 600);
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		//debugDepthShader.use();
+		//debugDepthShader.setFloat("near_plane", near_plane);
+		//debugDepthShader.setFloat("far_plane", far_plane);
+		//glActiveTexture(GL_TEXTURE0);
+		//glBindTexture(GL_TEXTURE_2D, shadowMapping);
+		//renderQuad();
+
+		// -----------Scene-------------
+		// Light
 		lightObj.Scale = glm::vec3(0.3f, 0.3f, 0.3f);
 		lightShader.use();
 		glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(lightObj.GetModelTrasform()));
@@ -413,11 +464,16 @@ int main()
 		modelLoadedShader.use();
 		SetupMarryShader(modelLoadedShader, Camera, lightObj.Translate);
 		
-		glActiveTexture(GL_TEXTURE1);
+		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D, shadowMapping);
-		modelLoadedShader.setInteger("shadowmap", 1);
-		glActiveTexture(GL_TEXTURE0);
+		modelLoadedShader.setInteger("shadowmap", 2);
+		glUniformMatrix4fv(glGetUniformLocation(modelLoadedShader.ID, "lightSpaceMatrix"), 1, GL_FALSE, glm::value_ptr(lightSpaceMatrix));
+		//glActiveTexture(GL_TEXTURE0);
 		model.Draw(modelLoadedShader);
+
+		// Floor
+		glBindVertexArray(planeVAO);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
 
 		// draw debug text
 		textR.DrawOnScreenDebugMessage(deltaTime);
@@ -433,3 +489,35 @@ int main()
 }
 /*******************************************************************************************************/
 // 对一个三角形, 先 用 vertex shader 计算三个点, 将输出进行插值后输入到 fargment shader
+
+
+// renderQuad() renders a 1x1 XY quad in NDC
+// -----------------------------------------
+unsigned int quadVAO = 0;
+unsigned int quadVBO;
+void renderQuad()
+{
+	if (quadVAO == 0)
+	{
+		float quadVertices[] = {
+			// positions        // texture Coords
+			-1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+			-1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+			 1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+			 1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+		};
+		// setup plane VAO
+		glGenVertexArrays(1, &quadVAO);
+		glGenBuffers(1, &quadVBO);
+		glBindVertexArray(quadVAO);
+		glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	}
+	glBindVertexArray(quadVAO);
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+	glBindVertexArray(0);
+}
