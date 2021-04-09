@@ -408,7 +408,8 @@ int main()
 
 		// π‚‘¥cube
 		glm::vec3 lightColor(1.0f, 0.5f, 1.0f);
-		lightObj.Translate = glm::vec3(2.f*sinf(glfwGetTime()), 3.5f , 3.0f*cosf(glfwGetTime()))/**sinf(glfwGetTime())*/;
+		//lightObj.Translate = glm::vec3(2.f*sinf(glfwGetTime()), 3.5f , 3.0f*cosf(glfwGetTime()))/**sinf(glfwGetTime())*/;
+		lightObj.Translate = glm::vec3(2.f, 3.5f , 0.0f)/**sinf(glfwGetTime())*/;
 
 		// Light space transform 
 		glm::mat4 lightView = glm::lookAt(lightObj.Translate, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));

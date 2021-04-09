@@ -80,13 +80,20 @@ float ShadowCalculation(vec4 fragPosLightSpace)
 	// depth map 坐标在[0,1]^2,
 	projCoords = projCoords * 0.5 + 0.5;
 
-	// 采样得到最近的z值
-	float closestDepth = texture(shadowmap, projCoords.xy).r;
-
 	float currentDepth = projCoords.z;
 
-	float shadow = currentDepth > closestDepth ? 1.0f:0.0f;
-
+	float delta = 0.002;
+	// 采样得到最近的z值
+	float closestDepth = currentDepth > texture(shadowmap, vec2(projCoords.x - delta, projCoords.y - delta)).r ? 1.0f : 0.0f;
+	closestDepth += currentDepth > texture(shadowmap, vec2(projCoords.x - delta, projCoords.y)).r ? 1.0f : 0.0f;
+	closestDepth += currentDepth > texture(shadowmap, vec2(projCoords.x - delta, projCoords.y + delta)).r ? 1.0f : 0.0f;
+	closestDepth += currentDepth > texture(shadowmap, vec2(projCoords.x , projCoords.y - delta)).r ? 1.0f : 0.0f;
+	closestDepth = currentDepth > texture(shadowmap, projCoords.xy).r ? 1.0f : 0.0f;
+	closestDepth += currentDepth > texture(shadowmap, vec2(projCoords.x , projCoords.y + delta)).r ? 1.0f : 0.0f;
+	closestDepth += currentDepth > texture(shadowmap, vec2(projCoords.x + delta , projCoords.y - delta)).r ? 1.0f : 0.0f;
+	closestDepth += currentDepth > texture(shadowmap, vec2(projCoords.x + delta , projCoords.y )).r ? 1.0f : 0.0f;
+	closestDepth += currentDepth > texture(shadowmap, vec2(projCoords.x + delta , projCoords.y + delta)).r ? 1.0f : 0.0f;
+	float shadow = closestDepth / 9.0f;
 
 	return shadow;
 }
