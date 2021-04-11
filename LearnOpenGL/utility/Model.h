@@ -1,12 +1,12 @@
 #pragma once 
 #include <vector>
 #include <string>
+#include <memory>
 
 #include "../Shaders/Shader.h"
 #include "Mesh.h"
 
 #include "assimp/scene.h"
-
 
 class RModel
 {

@@ -145,8 +145,6 @@ std::vector<BTexture> RModel::loadMaterialTextures(aiMaterial* mat, aiTextureTyp
 			textures_loaded.push_back(tex);
 		}
 	}
-
-
 	return textures;
 }
 

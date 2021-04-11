@@ -3,8 +3,8 @@
 #include <string>
 #include <unordered_map>
 
-#include "utility/CoreType.h"
-#include "utility/Mesh.h"
+#include "CoreType.h"
+#include "Mesh.h"
 
 template< typename T>
 class RMaterialParameterValue
@@ -18,15 +18,18 @@ using RScalarParameterValue = RMaterialParameterValue<float>;
 using RVectorParameterValue = RMaterialParameterValue<Vector3D>;
 using RTextureParameterValue = RMaterialParameterValue<BTexture*>;
 
+class Shader;
+
 class Material
 {
 public:
     Material();
-    Material(const std::string& fsSrc, const std::string& vsSrc);
-
-
+    Material(const std::shared_ptr<Shader>& MyShader);
+    void Use();
 private:
-    std::vector<
-    std::shared_ptr<class Shader> MyShader;
+    std::vector<RScalarParameterValue> ScalarParameters;
+    std::vector<RVectorParameterValue> VectorParameters;
+    std::vector<RTextureParameterValue> TextureParameters;
+    std::shared_ptr<Shader> MyShader;
 };
 

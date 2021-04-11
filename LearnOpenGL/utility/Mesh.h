@@ -2,6 +2,7 @@
 #include "CoreType.h"
 #include <string>
 #include <vector>
+#include <memory>
 
 #include "../Shaders/Shader.h"
 
@@ -20,6 +21,8 @@ struct BTexture
 };
 
 extern std::vector<BTexture> textures_loaded;
+
+class Material;
 
 class RMesh
 {
@@ -40,6 +43,8 @@ public:
 private:
 	// render data
 	unsigned int VAO, VBO, EBO;
+
+	std::shared_ptr<Material> MyMaterial;
 
 	/**
 	* Called in Constructor, Setup VAO, VBO, EBO
