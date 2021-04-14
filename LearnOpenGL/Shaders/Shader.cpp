@@ -3,6 +3,7 @@
 #include "glm/gtc/type_ptr.hpp"
 
 static const std::string ShaderFloder = "./Shaders/";
+std::array<std::shared_ptr<Shader>, static_cast<unsigned int>(ShaderType::MAX_ShaderNum)> Shader::ShaderPool{};
 
 Shader::Shader(const std::string& vertexPath, const std::string& fragmentPath)
 {
@@ -138,3 +139,16 @@ void Shader::setMat4(const std::string& name, const glm::mat4& ptr)
 {
 	glUniformMatrix4fv(glGetUniformLocation(ID, name.data()),1, GL_FALSE, glm::value_ptr(ptr));
 }
+
+std::shared_ptr<Shader> Shader::GetShader(ShaderType Type)
+{
+	const unsigned int Index = static_cast<unsigned int>(Type);
+	if (!ShaderPool[Index])
+	{
+#define SHADERDEF(Name, VertShader, FragShader) ShaderPool[static_cast<unsigned int>(ShaderType::Name)] = std::make_shared<Shader>(VertShader, FragShader);
+#include "Shaders/Shader.def"
+#undef SHADERDEF
+	}
+	return ShaderPool[Index];
+}
+

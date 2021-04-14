@@ -1,0 +1,3 @@
+SHADERDEF(ShaderShadowMapping,"shadowmapping.vert","shadowmapping.frag")
+SHADERDEF(ShaderLightingCube,"lightingCube.vert","light.frag")
+SHADERDEF(ShaderMarry,"marry.vert","marry.frag")

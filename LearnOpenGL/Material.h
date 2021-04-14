@@ -24,9 +24,8 @@ public:
     Material();
     Material(const std::string& fsSrc, const std::string& vsSrc);
 
-
 private:
-    std::vector<
+
     std::shared_ptr<class Shader> MyShader;
 };
 
