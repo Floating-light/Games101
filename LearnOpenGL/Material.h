@@ -5,6 +5,7 @@
 
 #include "utility/CoreType.h"
 #include "utility/Mesh.h"
+#include "Shaders/Shader.h"
 
 template< typename T>
 class RMaterialParameterValue
@@ -22,7 +23,7 @@ class Material
 {
 public:
     Material();
-    Material(const std::string& fsSrc, const std::string& vsSrc);
+    Material(EShaderType ShaderType);
 
 private:
 

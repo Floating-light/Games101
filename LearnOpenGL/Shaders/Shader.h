@@ -10,7 +10,7 @@
 
 #include "glm/glm.hpp"
 
-enum class ShaderType 
+enum class EShaderType 
 {
     #define	SHADERDEF(Name, VertShader, FragShader) Name,
     #include "Shaders/Shader.def" 
@@ -46,8 +46,8 @@ public:
 	void setMat4(const std::string& name, const glm::mat4& ptr);
 
 public:
-	static std::shared_ptr<Shader> GetShader(ShaderType Type);
+	static std::shared_ptr<Shader> GetShader(EShaderType Type);
 private:
-	static std::array<std::shared_ptr<Shader>, static_cast<unsigned int>(ShaderType::MAX_ShaderNum)> ShaderPool;
+	static std::array<std::shared_ptr<Shader>, static_cast<unsigned int>(EShaderType::MAX_ShaderNum)> ShaderPool;
 };
 

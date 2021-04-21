@@ -320,7 +320,8 @@ int main()
 	Shader lightShader("lightingCube.vert", "light.frag");
 
 	// for marry model
-	Shader modelLoadedShader("marry.vert", "marry.frag");
+	std::shared_ptr<Shader> modelLoadedShader = Shader::GetShader(ShaderType::ShaderMarry);
+	//Shader modelLoadedShader("marry.vert", "marry.frag");
 
 	// for shadow mapping 
 	Shader shadowMappingShader("shadowmapping.vert", "shadowmapping.frag");
@@ -462,15 +463,15 @@ int main()
 		glBindVertexArray(0);
 
 		// My marry model 
-		modelLoadedShader.use();
-		SetupMarryShader(modelLoadedShader, Camera, lightObj.Translate);
+		modelLoadedShader->use();
+		SetupMarryShader(*modelLoadedShader, Camera, lightObj.Translate);
 		
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D, shadowMapping);
-		modelLoadedShader.setInteger("shadowmap", 2);
-		glUniformMatrix4fv(glGetUniformLocation(modelLoadedShader.ID, "lightSpaceMatrix"), 1, GL_FALSE, glm::value_ptr(lightSpaceMatrix));
+		modelLoadedShader->setInteger("shadowmap", 2);
+		glUniformMatrix4fv(glGetUniformLocation(modelLoadedShader->ID, "lightSpaceMatrix"), 1, GL_FALSE, glm::value_ptr(lightSpaceMatrix));
 		//glActiveTexture(GL_TEXTURE0);
-		model.Draw(modelLoadedShader);
+		model.Draw(*modelLoadedShader);
 
 		// Floor
 		glBindVertexArray(planeVAO);
