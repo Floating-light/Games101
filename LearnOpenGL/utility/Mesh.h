@@ -2,7 +2,8 @@
 #include "CoreType.h"
 #include <string>
 #include <vector>
-
+#include <memory>
+#include "Material.h"
 #include "../Shaders/Shader.h"
 
 struct BVertex
@@ -37,6 +38,7 @@ public:
 	*/
 	void Draw(Shader& shader);
 
+	void Draw(std::shared_ptr<Material>& mat);
 private:
 	// render data
 	unsigned int VAO, VBO, EBO;
@@ -45,5 +47,4 @@ private:
 	* Called in Constructor, Setup VAO, VBO, EBO
 	*/
 	void SetupMesh();
-
 };

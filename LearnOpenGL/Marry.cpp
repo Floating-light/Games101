@@ -320,7 +320,7 @@ int main()
 	Shader lightShader("lightingCube.vert", "light.frag");
 
 	// for marry model
-	std::shared_ptr<Shader> modelLoadedShader = Shader::GetShader(ShaderType::ShaderMarry);
+	std::shared_ptr<Shader> modelLoadedShader = Shader::GetShader(EShaderType::ShaderMarry);
 	//Shader modelLoadedShader("marry.vert", "marry.frag");
 
 	// for shadow mapping 
@@ -336,7 +336,7 @@ int main()
 	lightObj.Scale = glm::vec3(0.3f, 0.3f, 0.3f);
 
 	// New model loaded
-	RModel model("./resources/objects/mary/Marry.obj");
+	RModel marryModel("./resources/objects/mary/Marry.obj");
 	
 	// plane 
 	float planeVertices[] = {
@@ -430,7 +430,7 @@ int main()
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 			// Marry
 			glUniformMatrix4fv(glGetUniformLocation(shadowMappingShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(Matrix4(1.0f)));
-			model.Draw(shadowMappingShader);
+			marryModel.Draw(shadowMappingShader);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		// End Shadow mapping
 
@@ -471,7 +471,7 @@ int main()
 		modelLoadedShader->setInteger("shadowmap", 2);
 		glUniformMatrix4fv(glGetUniformLocation(modelLoadedShader->ID, "lightSpaceMatrix"), 1, GL_FALSE, glm::value_ptr(lightSpaceMatrix));
 		//glActiveTexture(GL_TEXTURE0);
-		model.Draw(*modelLoadedShader);
+		marryModel.Draw(*modelLoadedShader);
 
 		// Floor
 		glBindVertexArray(planeVAO);

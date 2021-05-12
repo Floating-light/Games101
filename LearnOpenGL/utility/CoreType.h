@@ -1,6 +1,6 @@
 #pragma once
 #include <functional>
-
+#include <iostream>
 #include "glm/glm.hpp"
 
 struct GLFWwindow;
@@ -17,3 +17,7 @@ using KeyProcess = std::function<void(GLFWwindow*, float Rate)>;
 using MouseCursorMoveCallBack = std::function<void(double, double)>;
 
 using MouseScrollCallBack = std::function<void(double, double)>;
+
+// https://codereview.stackexchange.com/questions/211957/implementing-a-logging-system-in-c17
+// TODO: a more beautiful log system 
+#define Log(CategoryName, Verbosity, Format)  std::cout << CategoryName << "::" << Verbosity << " ----->>> " << Format << std::endl;

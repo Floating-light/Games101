@@ -12,6 +12,7 @@
 
 enum class EShaderType 
 {
+	None,
     #define	SHADERDEF(Name, VertShader, FragShader) Name,
     #include "Shaders/Shader.def" 
     #undef SHADERDEF
