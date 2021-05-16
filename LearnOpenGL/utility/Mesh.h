@@ -3,8 +3,8 @@
 #include <string>
 #include <vector>
 #include <memory>
-
-#include "../Shaders/Shader.h"
+#include "Material.h"
+#include "Shaders/Shader.h"
 
 struct BVertex
 {
@@ -32,7 +32,8 @@ public:
 	std::vector<BTexture> textures;
 
 	// constructor 
-	RMesh(std::vector<BVertex> vertices, std::vector<unsigned int> indices, std::vector<BTexture> textures);
+	RMesh(std::vector<BVertex> vertices, std::vector<unsigned int> indices, 
+		std::vector<BTexture> textures, EShaderType shaderType = EShaderType::Default);
 
 	// Draw this mesh
 	/**
@@ -40,6 +41,9 @@ public:
 	*/
 	void Draw(Shader& shader);
 
+	void Draw(std::shared_ptr<Material>& mat);
+
+	
 private:
 	// render data
 	unsigned int VAO, VBO, EBO;
@@ -50,5 +54,4 @@ private:
 	* Called in Constructor, Setup VAO, VBO, EBO
 	*/
 	void SetupMesh();
-
 };

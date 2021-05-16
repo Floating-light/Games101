@@ -5,6 +5,7 @@
 
 #include "../Shaders/Shader.h"
 #include "Mesh.h"
+#include "Material.h"
 
 #include "assimp/scene.h"
 
@@ -17,13 +18,14 @@ public:
 	}
 
 	void Draw(Shader& shader);
+	void Draw(std::shared_ptr<Material>& mat);
 private:
 	// model data 
 	std::vector<RMesh> meshes;
 
 	std::string directory;
 
-	void loadModel(const std::string& path);
+	void loadModel(const std::string& path, EShaderType ShaderType = EShaderType::None);
 
 	void processNode(aiNode* node, const aiScene* scene);
 
@@ -40,4 +42,7 @@ private:
 	*/
 	std::vector<BTexture> loadMaterialTextures(aiMaterial* mat, aiTextureType type, std::string typeName);
 
+	std::shared_ptr<Material> material;
+
+	EShaderType MyShaderType;
 };

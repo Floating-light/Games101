@@ -1,11 +1,17 @@
-#include "Material.h"
+#include <iostream>
+#include <algorithm>
+
 #include <glad/glad.h>
 
-#include <iostream>
+#include "Shaders/Shader.h"
+#include "utility/Material.h"
 
-Material::Material(const std::shared_ptr<Shader>& InShader)
+Material::Material(EShaderType ShaderType, const std::vector<BTexture>& InTexParam)
 {
+	MyShader = Shader::GetShader(ShaderType);
+	initTextureParams(InTexParam);
 
+	assert(MyShader);
 }
 
 void Material::Use()
@@ -30,9 +36,86 @@ void Material::Use()
 
 	for (size_t i = 0; i < TextureParameters.size(); ++i)
 	{
+		// active texture unit 
 		glActiveTexture(GL_TEXTURE0 + i);
-		glBindTexture(GL_TEXTURE_2D, TextureParameters[i].ParameterValue->id);
+		// bind this texture id to the actived texture unit above
+		glBindTexture(GL_TEXTURE_2D, TextureParameters[i].ParameterValue.id);
+
+		// set the texture unit id(0 -- 15 ) for texture parameter name in shader 
 		MyShader->setInteger(TextureParameters[i].ParameterName, i);
+
+		// that's say : texture id ---> texture unit number --> texture name in shader(bind a integer) 
 	}
-		
+}
+
+void Material::setOrAddScalarParameter(const std::string& paramName, float value)
+{
+	auto resItr = std::find_if(ScalarParameters.begin(), ScalarParameters.end(),
+		[&](const RScalarParameterValue& Param)
+		{
+			return Param.ParameterName == paramName;
+		});
+	if (resItr != ScalarParameters.end())
+	{
+		resItr->ParameterValue = value;
+	}
+	else
+	{
+		RScalarParameterValue NewValue = { paramName, value };
+		ScalarParameters.emplace_back(std::move(NewValue));
+	}
+}
+void Material::setOrAddVectorParameterValue(const std::string& paramName, Vector3D value)
+{
+	auto resItr = std::find_if(VectorParameters.begin(), VectorParameters.end(),
+		[&](const RVectorParameterValue& Param)
+		{
+			return Param.ParameterName == paramName;
+		});
+	if (resItr != VectorParameters.end())
+	{
+		resItr->ParameterValue = value;
+	}
+	else
+	{
+		RVectorParameterValue NewValue = { paramName, value };
+		VectorParameters.emplace_back(std::move(NewValue));
+	}
+}
+
+void Material::setOrAddTextureParameterValue(const std::string& paramName, BTexture value)
+{
+	auto resItr = std::find_if(TextureParameters.begin(), TextureParameters.end(), 
+		[&](const RTextureParameterValue& Param) 
+		{
+			return Param.ParameterName == paramName;
+		});
+	if (resItr != TextureParameters.end())
+	{
+		resItr->ParameterValue = value;
+	}
+	else
+	{
+		RTextureParameterValue NewValue = { paramName, value };
+		TextureParameters.emplace_back(std::move(NewValue));
+	}
+}
+
+void Material::initTextureParams(const std::vector<BTexture>& InTexture)
+{
+	int diffuseNr = 0, specularNr = 0;
+	for (unsigned int i = 0; i < InTexture.size(); ++i)
+	{
+		std::string number;
+		std::string name = InTexture[i].type;
+		if (name == "texture_diffuse")
+		{
+			number = std::to_string(diffuseNr++);
+		}
+		else if (name == "texture_specular")
+		{
+			number = std::to_string(specularNr++);
+		}
+		TextureParameters.emplace_back(RTextureParameterValue{ ("material." + name + number), InTexture[i] });
+	}
 }

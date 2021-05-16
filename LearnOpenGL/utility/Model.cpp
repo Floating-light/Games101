@@ -6,7 +6,7 @@
 #include "assimp/postprocess.h"
 
 #include "Utility.h"
-
+#include "CoreType.h"
 void RModel::Draw(Shader& shader)
 {
 	for (unsigned int i = 0; i < meshes.size(); ++i)
@@ -15,8 +15,18 @@ void RModel::Draw(Shader& shader)
 	}
 }
 
-void RModel::loadModel(const std::string& path)
+void RModel::Draw(std::shared_ptr<Material>& mat)
 {
+	for (size_t i = 0; i < meshes.size(); ++i)
+	{
+		//meshes[i].Draw()
+	}
+}
+
+
+void RModel::loadModel(const std::string& path, EShaderType ShaderType )
+{
+	MyShaderType = ShaderType;
 	Assimp::Importer import;
 	/*
 	* aiProcess_Triangulate 不是三角形的面先转换成三角面
@@ -34,6 +44,12 @@ void RModel::loadModel(const std::string& path)
 	}
 	directory = path.substr(0, path.find_last_of('/'));
 	processNode(scene->mRootNode, scene);
+
+
+	if (ShaderType != EShaderType::None)
+	{
+		material = std::make_shared<Material>(ShaderType);
+	}
 
 	//for (auto& mesh : meshes)
 	//{
@@ -73,22 +89,31 @@ RMesh RModel::processMesh(aiMesh* mesh, const aiScene* scene)
 	std::vector<unsigned int> indices;
 	std::vector<BTexture> textures;
 
+	// position, normal, texture coordinate
 	for (size_t i = 0; i < mesh->mNumVertices; i++)
 	{
 		BVertex vertex;
 		vertex.Position = Vector3D(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
 		vertex.Normal= Vector3D(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z);
-		if (mesh->mTextureCoords[0]) // the first texture coordinate
+		
+		// texture coordinate maybe multiple, but only get the first one for general texture coords.
+		if (mesh->mTextureCoords[0])
 		{
 			vertex.TexCoords = Vector2D(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
+			if (mesh->mTextureCoords[1])
+			{
+				Log(__FUNCTION__, "Warning", "There have multiple texture coordinates array");
+			}
 		}
 		else
 		{
+			Log(__FUNCTION__, "Warning", "Can not find a Texture coords array");
 			vertex.TexCoords = Vector2D(0.0f, 0.0f);
 		}
 		vertices.push_back(vertex);
 	}
 
+	// vertex indices buffer
 	for (size_t i = 0; i < mesh->mNumFaces; i++)
 	{
 		aiFace face = mesh->mFaces[i];
@@ -98,6 +123,7 @@ RMesh RModel::processMesh(aiMesh* mesh, const aiScene* scene)
 		}
 	}
 
+	// proccess material, material all in a array of scene.
 	if (mesh->mMaterialIndex >= 0)
 	{
 		aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
@@ -110,7 +136,7 @@ RMesh RModel::processMesh(aiMesh* mesh, const aiScene* scene)
 		//scene->mMaterials
 
 	}
-	return RMesh(vertices, indices, textures);
+	return RMesh(vertices, indices, textures, MyShaderType);
 }
 
 std::vector<BTexture> RModel::loadMaterialTextures(aiMaterial* mat, aiTextureType type, std::string typeName)
