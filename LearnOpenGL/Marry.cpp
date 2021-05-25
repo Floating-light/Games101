@@ -459,6 +459,7 @@ int main()
 		lightShader.setVec3("lightColor", lightColor);
 		glBindVertexArray(lightObj.VAO);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
+		//Render render.Draw(lightObj);
 
 		glBindVertexArray(0);
 

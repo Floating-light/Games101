@@ -1,6 +1,11 @@
 #pragma once
 #include <vector>
+#include <memory>
+
 #include <glm/glm.hpp>
+
+class RModel;
+
 class RSceneObject
 {
 public:
@@ -8,17 +13,17 @@ public:
 
 	glm::mat4 GetModelTrasform();
 
-	void Tick();
+	virtual void Tick();
 
-	void InputEvent(int key, int action);
+	virtual void InputEvent(int key, int action);
 
 	void ResetTransform();
 	static RSceneObject Create3DCube();
 
 	static void CreateVAO(RSceneObject& Obj);
 
-private:
 	std::vector<float> Vertices;
+	std::shared_ptr<RModel> Model;
 public:
 	glm::vec3 Rotator;
 	glm::vec3 Scale;
