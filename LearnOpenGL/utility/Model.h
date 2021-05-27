@@ -12,20 +12,20 @@
 class RModel
 {
 public:
-	RModel(const std::string& path)
+	RModel(const std::string& path, EShaderType MyShader = EShaderType::Default)
 	{
-		loadModel(path);
+		loadModel(path, MyShader);
 	}
-
 	void Draw(Shader& shader);
 	void Draw(std::shared_ptr<Material>& mat);
-private:
+	void Draw();
 	// model data 
 	std::vector<RMesh> meshes;
+private:
 
 	std::string directory;
 
-	void loadModel(const std::string& path, EShaderType ShaderType = EShaderType::None);
+	void loadModel(const std::string& path, EShaderType ShaderType = EShaderType::Default);
 
 	void processNode(aiNode* node, const aiScene* scene);
 

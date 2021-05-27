@@ -19,10 +19,17 @@ void RModel::Draw(std::shared_ptr<Material>& mat)
 {
 	for (size_t i = 0; i < meshes.size(); ++i)
 	{
-		//meshes[i].Draw()
+		meshes[i].Draw(mat);
 	}
 }
 
+void RModel::Draw()
+{
+	for (size_t i = 0; i < meshes.size(); ++i)
+	{
+		meshes[i].Draw(material);
+	}
+}
 
 void RModel::loadModel(const std::string& path, EShaderType ShaderType )
 {

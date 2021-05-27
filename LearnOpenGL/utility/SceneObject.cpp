@@ -38,6 +38,10 @@ void RSceneObject::ResetTransform()
 	Translate = glm::vec3(0.0f, 0.0f, 0.0f);
 }
 
+void RSceneObject::SetModel(std::shared_ptr<RModel> NewModel)
+{
+	Model = NewModel;
+}
 
 void RSceneObject::InputEvent(int key, int action)
 {
@@ -59,7 +63,7 @@ void RSceneObject::InputEvent(int key, int action)
 		Rotator.y += 10;
 	}
 }
-void RSceneObject::Tick()
+void RSceneObject::Tick(float DeltaTime)
 {
 	//const float CurrentTime = glfwGetTime();
 	//Scale = glm::vec3(1.0f, 1.0f, 1.0f) * abs(sinf(CurrentTime));
@@ -68,6 +72,14 @@ void RSceneObject::Tick()
 	//if(index < 3)
 	//	Rotator[index] += ((sign == 1) ? 1 : 1) * (rand() % 30);
 }
+
+
+
+
+
+
+
+
 
 RSceneObject RSceneObject::Create3DCube()
 {

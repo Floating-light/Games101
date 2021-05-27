@@ -1,9 +1,8 @@
 #pragma once 
 #include "Math.h"
+#include "utility/SceneObject.h"
 
-
-
-class RCamera
+class RCamera : public RSceneObject
 {
 public:
 	RCamera() :
@@ -21,7 +20,7 @@ public:
 
 	}
 
-	void Tick(float DeltaTime);
+	virtual void Tick(float DeltaTime) override;
 
 	void InputEvent(int key, int action);
 	
