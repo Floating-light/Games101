@@ -27,9 +27,15 @@ glm::mat4 RSceneObject::GetModelTrasform()
 
 	// scale
 	res = glm::scale(res, Scale);
-
+	
 	return std::move(res);
 }
+
+Vector3D RSceneObject::GetWorldLocation()
+{
+	return Translate;
+}
+
 
 void RSceneObject::ResetTransform()
 {

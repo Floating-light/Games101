@@ -43,6 +43,7 @@ public:
 
 	void Draw(std::shared_ptr<Material>& mat);
 
+	std::shared_ptr<Material> GetMaterial() { return MyMaterial; }
 	
 private:
 	// render data

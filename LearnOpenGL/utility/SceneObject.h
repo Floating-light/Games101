@@ -3,6 +3,7 @@
 #include <memory>
 
 #include <glm/glm.hpp>
+#include "CoreType.h"
 
 class RModel;
 
@@ -18,6 +19,9 @@ public:
 	}
 	RSceneObject(std::vector<float>&& V);
 	RSceneObject(std::shared_ptr<RModel> NewModel)
+		: Rotator(0.0f, 0.0f, 0.0f)
+		, Scale(1.0f, 1.0f, 1.0f)
+		, Translate(0.0f, 0.0f, 3.0f)
 	{
 		SetModel(NewModel);
 	}
@@ -28,6 +32,7 @@ public:
 	glm::mat4 GetModelTrasform();
 	void ResetTransform();
 
+	Vector3D GetWorldLocation();
 	void SetModel(std::shared_ptr<RModel> NewModel);
 
 	static RSceneObject Create3DCube();

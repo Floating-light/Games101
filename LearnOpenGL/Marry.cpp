@@ -235,7 +235,7 @@ void SetupMarryShader(Shader& shader, const RCamera& camera, glm::vec3 lightPosi
 	shader.setInteger("material.texture_specular1", 1);
 	shader.setFloat("material.shininess", 128.0f);
 
-	// point light
+	// point light 
 	shader.setVec3("pointlight.position", lightPosition);
 	shader.setVec3("pointlight.ambient", glm::vec3(1.0f, 1.0f, 1.0f));
 	shader.setVec3("pointlight.diffuse", glm::vec3(0.8f, 0.8f, 0.8f));
@@ -277,7 +277,7 @@ void MakeDepthMapFBO(unsigned int& depthMapFBO, unsigned int& depthMap)
 }
 // meshes
 unsigned int planeVAO;
-int main()
+int FALSEmain()
 {
 	// Init glfw
 	glfwInit();

@@ -130,8 +130,8 @@ void ReadImageToTexture(const std::string& imagePath, GLenum textureUnit, GLenum
 
 	glBindTexture(GL_TEXTURE_2D, textureID);
 	float borderColor[] = { 1.0f, 0.0f, 0.0f, 0.5f };
-	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor); // Èç¹ûÉÏÃæÓÃÁËGL_CLAMP_TO_BORDER, ÔòÒªÕâÑùÖ¸¶¨±ß½çÑÕÉ«
-	// ÉèÖÃ±ß½ç
+	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor); // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½GL_CLAMP_TO_BORDER, ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ß½ï¿½ï¿½ï¿½É«
+	// ï¿½ï¿½ï¿½Ã±ß½ï¿½
 	/*
 	*	GL_REPEAT
 	*	GL_MIRRORED_REPEAT
@@ -141,14 +141,14 @@ void ReadImageToTexture(const std::string& imagePath, GLenum textureUnit, GLenum
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-	// texture ²ÉÑù
+	// texture ï¿½ï¿½ï¿½ï¿½
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 
 
 	int width, height, channels;
-	stbi_set_flip_vertically_on_load(true); // image y ·½Ïò·­×ª.
+	stbi_set_flip_vertically_on_load(true); // image y ï¿½ï¿½ï¿½ï¿½×ª.
 	unsigned char* data = stbi_load(imagePath.data(), &width, &height, &channels, 0);
 	if (data)
 	{
@@ -251,10 +251,10 @@ int main()
 		return -1;
 	}
 
-	// Òþ²ØÊó±êÖ¸Õë
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-	// ÉèÖÃÖ¸¶¨window µÄframebuffer size µÄcallback.
+	// ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½window ï¿½ï¿½framebuffer size ï¿½ï¿½callback.
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetKeyCallback(window, key_callback);
 	glfwSetCursorPosCallback(window, mouse_callback);
@@ -329,13 +329,13 @@ int main()
 		deltaTime = currentTime - lastFrameTime;
 		lastFrameTime = currentTime;
 		//lightObj.Translate = glm::vec3(sin(glfwGetTime()), 1.0f, cos(glfwGetTime()));
-		// ´¦ÀíÖ¸¶¨window µÄÊäÈë
+		// ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½window ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		processInput(window, cubeShader, deltaTime);
 
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// °ó¶¨ÎÆÀíµ½ÎÆÀíµ¥Ôª
+		// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ôª
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, TextureID0);
 
@@ -374,7 +374,6 @@ int main()
 
 		SetupMultipleShader(cubeShader, Camera, pointLightPositions);
 
-		Obj.Tick();
 
 		//Camera.Location = Vector3D(sin(glfwGetTime()) * Camera.RotationRadius, 0.0f, cos(glfwGetTime()) * Camera.RotationRadius);
 		glUniformMatrix4fv(glGetUniformLocation(cubeShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(Obj.GetModelTrasform()));
@@ -397,7 +396,7 @@ int main()
 			glUniformMatrix4fv(glGetUniformLocation(cubeShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(M_model));
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
-		// ¹âÔ´cube
+		// ï¿½ï¿½Ô´cube
 		lightShader.use();
 		glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(lightObj.GetModelTrasform()));
 		glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "view"), 1, GL_FALSE, glm::value_ptr(Camera.GetViewTransform()));
@@ -422,7 +421,7 @@ int main()
 
 		glfwPollEvents(); // keyboard input, mouse movement events
 
-		glfwSwapBuffers(window); // ½»»»buffer, ÏÔÊ¾×îÐÂµÄäÖÈ¾½á¹û
+		glfwSwapBuffers(window); // ï¿½ï¿½ï¿½ï¿½buffer, ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½Âµï¿½ï¿½ï¿½È¾ï¿½ï¿½ï¿½
 	}
 
 	glfwTerminate();
@@ -430,4 +429,4 @@ int main()
 	return 0;
 }
 /*******************************************************************************************************/
-// ¶ÔÒ»¸öÈý½ÇÐÎ, ÏÈ ÓÃ vertex shader ¼ÆËãÈý¸öµã, ½«Êä³ö½øÐÐ²åÖµºóÊäÈëµ½ fargment shader
+// ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ ï¿½ï¿½ vertex shader ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð²ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½ëµ½ fargment shader

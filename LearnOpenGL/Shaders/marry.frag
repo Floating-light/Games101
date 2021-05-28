@@ -68,9 +68,9 @@ void main()
 
 	vec3 result = CalcPointLight(pointlight, norm, fs_in.FragPos, viewDir);
 
-	outColor = vec4(result, 1.0);
+//	outColor = vec4(result, 1.0);
 //	outColor = vec4(vec3(texture(shadowmap, TexCoord).r),1.0f);
-//	outColor = texture(material.texture_diffuse1, TexCoord);
+	outColor = texture(material.texture_diffuse1, fs_in.TexCoords);
 }
 // return 1 if this fragment in the shadow, else return 0;
 float ShadowCalculation(vec4 fragPosLightSpace)

@@ -46,6 +46,11 @@ void Material::Use()
 
 		// that's say : texture id ---> texture unit number --> texture name in shader(bind a integer) 
 	}
+
+	for (auto& Mat4Param : Materix4Parameters)
+	{
+		MyShader->setMat4(Mat4Param.ParameterName, Mat4Param.ParameterValue);
+	}
 }
 
 void Material::setOrAddScalarParameter(const std::string& paramName, float value)
@@ -100,6 +105,25 @@ void Material::setOrAddTextureParameterValue(const std::string& paramName, BText
 		TextureParameters.emplace_back(std::move(NewValue));
 	}
 }
+
+void Material::setOrAddMatrix4ParameterValue(const std::string& paramName, const Matrix4& value)
+{
+	auto resItr = std::find_if(Materix4Parameters.begin(), Materix4Parameters.end(),
+		[&](const RMatrix4ParameterValue& Param)
+		{
+			return Param.ParameterName == paramName;
+		});
+	if (resItr != Materix4Parameters.end())
+	{
+		resItr->ParameterValue = value;
+	}
+	else
+	{
+		RMatrix4ParameterValue NewValue = { paramName, value };
+		Materix4Parameters.emplace_back(std::move(NewValue));
+	}
+}
+
 
 void Material::initTextureParams(const std::vector<BTexture>& InTexture)
 {

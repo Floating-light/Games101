@@ -7,7 +7,7 @@
 #include "Shaders/Shader.h"
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+#include "utility/stb_image.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -33,7 +33,7 @@ enum class InputVertexID
 // Get The vertices to rendering
 std::vector<float>& GetVertices(const InputVertexID Type = InputVertexID::TriangleCenter)
 {
-	// µ¥¸öÈý½ÇÐÎ
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	static std::vector<float > VertTriangleCenter = {
 			 -0.5f, -0.5f, 0.0f,1.0f, 0.0f, 0.0f,
 			  0.5f, -0.5f, 0.0f,0.0f, 1.0f, 0.0f,
@@ -49,7 +49,7 @@ std::vector<float>& GetVertices(const InputVertexID Type = InputVertexID::Triang
 		  0.5f, 0.5f, 0.0f,
 		  0.0f, -0.5f, 0.0f };
 
-	// Õý·½ÐÎ
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	static std::vector<float > VertRectangle = { 0.5f, 0.5f, 0.0f,
 											  0.5f, -0.5f, 0.0f,
 											  -0.5f, -0.5f, 0.0f,
@@ -80,10 +80,10 @@ std::vector<unsigned int>& GetIndices()
 	return indices;
 }
 
-// ÏÈÅäÖÃºÃËùÓÐÒªÓÃµÄVBO, attributes pointers ÎªVAO, È»ºó±£´æÕâÐ©VAO, ºóÃæÔÙÓÃ. 
+// ï¿½ï¿½ï¿½ï¿½ï¿½Ãºï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½Ãµï¿½VBO, attributes pointers ÎªVAO, È»ï¿½ó±£´ï¿½ï¿½ï¿½Ð©VAO, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½. 
 void ConfigVertexArrayObejcts(unsigned int& VAO, unsigned int& VBO, unsigned int& EBO)
 {
-	//float* vertices = GetVertices(); // ÎÞ·¨·µ»ØÍêÕûµÄÊý×é, »á±»µ±³ÉÒ»¸öÊý.
+	//float* vertices = GetVertices(); // ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½á±»ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½.
 	auto& vvector = GetVertices(InputVertexID::TriangleCenter);
 	auto& indices = GetIndices();
 
@@ -103,7 +103,7 @@ void ConfigVertexArrayObejcts(unsigned int& VAO, unsigned int& VBO, unsigned int
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
-	// ÔÚunbind VAOÖ®Ç°¶¼²»ÄÜunbind EBO
+	// ï¿½ï¿½unbind VAOÖ®Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½unbind EBO
 	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); // error VAO also remenber the unbind
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
@@ -131,7 +131,7 @@ void ConfigVertexArrayObejct_Gen(unsigned int& VAO, unsigned int& VBO, InputVert
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3* sizeof(float)));
 	glEnableVertexAttribArray(1);
 
-	// ÔÚunbind VAOÖ®Ç°¶¼²»ÄÜunbind EBO
+	// ï¿½ï¿½unbind VAOÖ®Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½unbind EBO
 	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); // error VAO also remenber the unbind
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
@@ -164,7 +164,7 @@ int main()
 		return -1;
 	}
 
-	// ÉèÖÃÖ¸¶¨window µÄframebuffer size µÄcallback.
+	// ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½window ï¿½ï¿½framebuffer size ï¿½ï¿½callback.
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	//glViewport(0, 0, 800, 600);
 
@@ -186,7 +186,7 @@ int main()
 	// render loop
 	while (!glfwWindowShouldClose(window))
 	{
-		// ´¦ÀíÖ¸¶¨window µÄÊäÈë
+		// ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½window ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		processInput(window);
 
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -210,7 +210,7 @@ int main()
 
 
 		glfwPollEvents(); // keyboard input, mouse movement events
-		glfwSwapBuffers(window); // ½»»»buffer, ÏÔÊ¾×îÐÂµÄäÖÈ¾½á¹û
+		glfwSwapBuffers(window); // ï¿½ï¿½ï¿½ï¿½buffer, ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½Âµï¿½ï¿½ï¿½È¾ï¿½ï¿½ï¿½
 	}
 
 	glDeleteVertexArrays(1, &VAO);

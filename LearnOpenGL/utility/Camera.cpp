@@ -61,11 +61,11 @@ void RCamera::InputProcess(GLFWwindow* window, float Rate)
 		Location += RMath::Normalize(RMath::Cross(Front, Up))* cameraSpeed;
 	}
 
-	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
 	{
 		Location += cameraSpeed * Up;
 	}
-	if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
+	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
 	{
 		Location -= cameraSpeed * Up;
 	}

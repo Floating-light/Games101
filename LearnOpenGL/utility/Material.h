@@ -21,6 +21,7 @@ struct BTexture;
 using RScalarParameterValue = RMaterialParameterValue<float>;
 using RVectorParameterValue = RMaterialParameterValue<Vector3D>;
 using RTextureParameterValue = RMaterialParameterValue<BTexture>;
+using RMatrix4ParameterValue = RMaterialParameterValue<Matrix4>;
 
 class Shader;
 
@@ -34,6 +35,7 @@ public:
     void setOrAddScalarParameter(const std::string& paramName, float value);
     void setOrAddVectorParameterValue(const std::string& paramName, Vector3D value);
     void setOrAddTextureParameterValue(const std::string& paramName, BTexture value);
+    void setOrAddMatrix4ParameterValue(const std::string& paramName, const Matrix4& value);
 
     //void addTextureParameter(const std::string& paramName, BTexture* value);
 private:
@@ -42,6 +44,7 @@ private:
     std::vector<RScalarParameterValue> ScalarParameters;
     std::vector<RVectorParameterValue> VectorParameters;
     std::vector<RTextureParameterValue> TextureParameters;
+    std::vector<RMatrix4ParameterValue> Materix4Parameters;
     std::shared_ptr<Shader> MyShader;
 };
 
