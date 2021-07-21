@@ -107,12 +107,14 @@ int main()
 		SceneObjects.push_back(obj1);
 	}
 
+	// Camera 
 	std::shared_ptr<RCamera> Camera = std::make_shared<RCamera>();
 	R::KeyEvents.push_back(std::bind(&RCamera::InputEvent, Camera, std::placeholders::_1, std::placeholders::_2));
 	R::KeyProc.push_back(std::bind(&RCamera::InputProcess, Camera, std::placeholders::_1, std::placeholders::_2));
 	R::MouseCursorMove.push_back(std::bind(&RCamera::EventMouseMove, Camera, std::placeholders::_1, std::placeholders::_2));
 	R::MouseScroll.push_back(std::bind(&RCamera::EventMouseScroll, Camera, std::placeholders::_1, std::placeholders::_2));
 
+	// Light
 	std::shared_ptr<RLightObject> Light = std::make_shared<RLightObject>();
 
 	RRenderer render;
