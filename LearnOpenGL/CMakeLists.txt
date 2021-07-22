@@ -1,21 +1,51 @@
 include(CMakeDependentOption)
+include(FetchContent)
 cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 
 project(RealEngine LANGUAGES CXX)
+
+# OpenGL
+find_package(OpenGL REQUIRED)
+include_directories(${OPENGL_INCLUDE_DIRS})
+
+# GLFW
+FetchContent_Declare(
+    glfw
+    GIT_REPOSITORY https://github.com/glfw/glfw.git
+    GIT_TAG 3.3.4
+)
+set( GLFW_BUILD_DOCS OFF CACHE BOOL  "GLFW lib only" )
+set( GLFW_INSTALL OFF CACHE BOOL  "GLFW lib only" )
+
+FetchContent_MakeAvailable(glfw)
+
+# glad 
+add_library(glad-static
+    STATIC 
+    glad.cpp
+    glad.h
+    )
+
+# Custom library header and lib 
 include_directories(../../ThridLib/include/ ./)
 LINK_DIRECTORIES(../../ThridLib/lib/)
+LINK_DIRECTORIES(../../ThridLib/dll/)
+
+
+# error LNK2019: unresolved external symbol WinMain referenced in function "int __cdecl invoke_main(void)" (?invoke_main@@YAHXZ)
+# Must after project declare
+if( MSVC )
+    SET( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /ENTRY:mainCRTStartup" )
+endif()
+
 # CONFIGURE_DEPENDS automatically check and reset the file lists any time the build is invoked.
 # avoid manually re-running cmake every time a file is added
-file(GLOB_RECURSE allSource CONFIGURE_DEPENDS "utility/*.h" "utility/*.hpp" "utility/*.cpp" "utility/*.c" "Shaders/*.h" "Shaders/*.cpp" )
+file(GLOB_RECURSE allSource CONFIGURE_DEPENDS "utility/*.h" "utility/*.hpp" "utility/*.cpp" "Shaders/*.h" "Shaders/*.cpp" )
 list(APPEND allSource main.cpp)
 message(STATUS "${allSource}")
 
-add_executable(RealEngine ${allSource} )
-target_link_libraries(RealEngine assimp-vc142-mtd.lib freetype.lib glfw3.lib opencv_world451d.lib opengl32.lib)
+add_executable(RealEngine WIN32 ${allSource} )
 
-# set_target_properties(RealEngine
-#     PROPERTIES
-#       CXX_STANDARD 11
-# )
-
-# target_link_directories(RealEngine -L../../ThridLib/lib/)
+# 会导致C的链接不到, 比如Windows的API, 干
+# set_target_properties(RealEngine PROPERTIES LINKER_LANGUAGE Cxx)
+target_link_libraries(RealEngine glad-static glfw ${OPENGL_LIBRARIES} assimp-vc142-mtd.lib freetype.lib opencv_world451d.lib freetype.dll assimp-vc142-mtd.dll)
